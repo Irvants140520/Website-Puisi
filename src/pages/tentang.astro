@@ -1,0 +1,73 @@
+---
+import Layout  from '../layouts/Layout.astro';
+import Header  from '../components/Header.astro';
+import Footer  from '../components/Footer.astro';
+import { getAllPuisi } from '../lib/supabase.js';
+
+const total = (await getAllPuisi()).length;
+---
+<Layout title="Tentang — Chao Ivans">
+  <div class="page">
+    <Header currentPath="/tentang" />
+    <main>
+      <div class="container">
+        <div class="wrap">
+
+          <div class="hero">
+            <h1 class="name">Chao Ivans</h1>
+            <div class="rule"><span></span><span class="m">〜</span><span></span></div>
+          </div>
+
+          <blockquote class="quote">
+            <p>Membaca untuk mengenal dunia</p>
+            <p class="q2">Dan menulis untuk dikenal dunia.</p>
+          </blockquote>
+
+          <div class="bio">
+            <p>Ini adalah ruang pribadi untuk menulis dan menyimpan puisi. Setiap baris lahir dari pengamatan — hujan di luar jendela, keramaian kota yang sunyi, percakapan dalam hati, dan momen-momen kecil yang terasa besar.</p>
+            <p>Puisi bukan sekadar kata-kata. Ia adalah cara untuk berdiam sejenak, merasakan sesuatu dengan lebih penuh, dan menemukan bahasa bagi hal-hal yang selama ini tak terucapkan.</p>
+          </div>
+
+          <div class="stats">
+            <div class="stat"><span class="sn" id="cnt">{total}</span><span class="sl">Karya</span></div>
+            <div class="sdiv">·</div>
+            <div class="stat"><span class="sn">2024</span><span class="sl">Dimulai</span></div>
+            <div class="sdiv">·</div>
+            <div class="stat"><span class="sn">ID</span><span class="sl">Bahasa</span></div>
+          </div>
+
+          <a href="/semua" class="cta">Baca semua karya →</a>
+        </div>
+      </div>
+    </main>
+    <Footer />
+  </div>
+</Layout>
+
+<style>
+  .page{display:flex;flex-direction:column;min-height:100vh} main{flex:1}
+  .container{max-width:640px;margin:0 auto;padding:4rem 1.5rem 6rem}
+  .wrap{opacity:0;animation:fadeUp .7s .1s ease forwards}
+
+  .hero{margin-bottom:2.5rem}
+  .name{font-family:var(--display);font-size:clamp(2.8rem,10vw,5rem);font-weight:400;line-height:1.1;letter-spacing:-.02em;color:var(--fog);margin-bottom:1.5rem}
+  .rule{display:flex;align-items:center;gap:.75rem}
+  .rule span:first-child,.rule span:last-child{flex:1;height:1px;background:var(--ink-line)}
+  .m{color:var(--teal);opacity:.4;font-size:1rem}
+
+  .quote{margin:2.5rem 0;padding:2rem 1.75rem;border-left:3px solid rgba(0,212,184,.4);background:linear-gradient(to right,var(--teal-faint),transparent 80%);border-radius:0 4px 4px 0}
+  .quote p{font-family:var(--display);font-style:italic;font-size:clamp(1.1rem,3.5vw,1.4rem);font-weight:400;line-height:1.8;color:var(--fog-dim)}
+  .q2{color:var(--fog)}
+
+  .bio{margin:2.5rem 0;display:flex;flex-direction:column;gap:1.1rem}
+  .bio p{font-family:var(--serif);font-size:1rem;line-height:1.9;color:var(--fog-dim)}
+
+  .stats{display:flex;align-items:center;gap:1.5rem;margin:2.5rem 0;padding:1.5rem;background:var(--ink-card);border:1px solid var(--ink-line);border-radius:4px;flex-wrap:wrap}
+  .stat{display:flex;flex-direction:column;align-items:center;gap:.2rem}
+  .sn{font-family:var(--display);font-size:1.8rem;color:var(--teal);line-height:1}
+  .sl{font-family:var(--mono);font-size:.58rem;text-transform:uppercase;letter-spacing:.12em;color:var(--fog-ghost)}
+  .sdiv{color:var(--ink-line);font-size:1.5rem;flex:1;text-align:center}
+
+  .cta{font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.14em;color:var(--teal-soft);transition:color .2s;display:inline-block;margin-top:.5rem}
+  .cta:hover{color:var(--teal)}
+</style>

@@ -1,0 +1,28 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+---
+<Layout title="404 — Chao Ivans">
+  <div class="page">
+    <Header />
+    <main class="main">
+      <div class="wrap">
+        <span class="n">404</span>
+        <h1 class="t">Halaman tidak ditemukan</h1>
+        <p class="s">Mungkin puisi ini belum ditulis,<br/>atau sudah pergi bersama angin.</p>
+        <a href="/" class="btn">← Kembali ke beranda</a>
+      </div>
+    </main>
+    <Footer />
+  </div>
+</Layout>
+<style>
+  .page{display:flex;flex-direction:column;min-height:100vh} .main{flex:1;display:flex;align-items:center}
+  .wrap{max-width:500px;margin:0 auto;padding:4rem 1.5rem;text-align:center}
+  .n{font-family:var(--mono);font-size:clamp(5rem,18vw,9rem);color:var(--ink-line);display:block;line-height:1;margin-bottom:1.5rem}
+  .t{font-family:var(--display);font-size:clamp(1.3rem,4vw,1.7rem);font-weight:400;font-style:italic;color:var(--fog);margin-bottom:.75rem}
+  .s{font-family:var(--serif);font-style:italic;font-size:.92rem;color:var(--fog-dim);line-height:1.8;margin-bottom:2rem}
+  .btn{font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.14em;color:var(--teal-soft);border:1px solid var(--ink-line);padding:.6rem 1.2rem;border-radius:3px;transition:all .2s;display:inline-block}
+  .btn:hover{color:var(--teal);border-color:var(--teal-soft);background:var(--teal-faint)}
+</style>

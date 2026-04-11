@@ -1,0 +1,49 @@
+---
+const { puisi, index = 0 } = Astro.props;
+
+function formatTgl(str) {
+  return new Date(str).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+const firstLine = (puisi.isi || '').trim().split('\n').find(l => l.trim()) || '';
+---
+
+<article class="card" style={`animation-delay:${index * 0.07}s`}>
+  <a href={`/puisi/${puisi.slug}`} class="inner">
+    <span class="date">{formatTgl(puisi.tanggal)}</span>
+    <h2 class="title">{puisi.judul}</h2>
+    {puisi.pengantar && <p class="pengantar">{puisi.pengantar}</p>}
+    <div class="divider"><span></span><span class="dot">·</span><span></span></div>
+    {firstLine && <p class="firstline">"{firstLine}"</p>}
+    <span class="cta">Baca <span class="arrow">→</span></span>
+  </a>
+</article>
+
+<style>
+  .card {
+    background: var(--ink-card);
+    opacity: 0; transform: translateY(18px);
+    animation: fadeUp .55s ease forwards;
+    transition: background .25s, transform .3s;
+  }
+  .card:hover { background: var(--ink-raised); transform: translateY(-1px); }
+  .inner { display: block; padding: 1.6rem 1.5rem 1.4rem; }
+
+  .date { font-family: var(--mono); font-size: .6rem; letter-spacing: .12em; color: var(--fog-ghost); text-transform: uppercase; display: block; margin-bottom: .9rem; }
+
+  .title { font-family: var(--display); font-size: clamp(1.2rem,4vw,1.5rem); font-weight: 400; line-height: 1.25; color: var(--fog); margin-bottom: .6rem; transition: color .25s; }
+  .card:hover .title { color: #fff; }
+
+  .pengantar { font-size: .82rem; font-style: italic; color: var(--fog-dim); line-height: 1.6; margin-bottom: 1.1rem; }
+
+  .divider { display: flex; align-items: center; gap: .4rem; margin-bottom: 1rem; }
+  .divider span:first-child, .divider span:last-child { flex: 1; height: 1px; background: var(--ink-line); }
+  .dot { color: var(--teal); opacity: .4; font-size: .7rem; line-height: 1; }
+
+  .firstline { font-family: var(--serif); font-style: italic; font-size: .88rem; color: rgba(237,233,227,.35); line-height: 1.7; margin-bottom: 1.25rem; }
+
+  .cta { font-family: var(--mono); font-size: .62rem; text-transform: uppercase; letter-spacing: .14em; color: var(--teal-soft); transition: color .2s; }
+  .arrow { display: inline-block; transition: transform .25s; }
+  .card:hover .cta { color: var(--teal); }
+  .card:hover .arrow { transform: translateX(5px); }
+</style>

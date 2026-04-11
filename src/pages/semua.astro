@@ -1,0 +1,45 @@
+---
+import Layout    from '../layouts/Layout.astro';
+import Header    from '../components/Header.astro';
+import PuisiCard  from '../components/PuisiCard.astro';
+import Footer    from '../components/Footer.astro';
+import { getAllPuisi } from '../lib/supabase.js';
+
+const puisiList = await getAllPuisi();
+---
+
+<Layout title="Karya — Chao Ivans">
+  <div class="page">
+    <Header currentPath="/semua" />
+    <main>
+      <div class="container">
+        <header class="head">
+          <h1 class="title">Karya</h1>
+          <p class="sub">{puisiList.length} puisi</p>
+        </header>
+
+        {puisiList.length > 0 ? (
+          <div class="grid">
+            {puisiList.map((p, i) => <PuisiCard puisi={p} index={i} />)}
+          </div>
+        ) : (
+          <p class="empty">Belum ada puisi. Tambahkan lewat Supabase.</p>
+        )}
+      </div>
+    </main>
+    <Footer />
+  </div>
+</Layout>
+
+<style>
+  .page { display:flex; flex-direction:column; min-height:100vh; }
+  main  { flex:1; }
+  .container { max-width:860px; margin:0 auto; padding:3rem 1.5rem 5rem; }
+  .head { margin-bottom:2.5rem; padding-bottom:1.25rem; border-bottom:1px solid var(--ink-line); }
+  .title { font-family:var(--display); font-size:clamp(2rem,7vw,3rem); font-weight:400; font-style:italic; color:var(--fog); margin-bottom:.3rem; }
+  .sub   { font-family:var(--mono); font-size:.65rem; text-transform:uppercase; letter-spacing:.12em; color:var(--fog-ghost); }
+  .grid  { display:grid; grid-template-columns:1fr; gap:1px; background:var(--ink-line); border:1px solid var(--ink-line); border-radius:4px; overflow:hidden; }
+  @media(min-width:640px){ .grid{grid-template-columns:repeat(2,1fr)} }
+  @media(min-width:900px){ .grid{grid-template-columns:repeat(3,1fr)} }
+  .empty { font-family:var(--serif); font-style:italic; color:var(--fog-ghost); text-align:center; padding:3rem 0; }
+</style>

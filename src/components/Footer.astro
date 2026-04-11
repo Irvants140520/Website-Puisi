@@ -1,0 +1,26 @@
+---
+const year = new Date().getFullYear();
+---
+<footer class="footer">
+  <div class="inner">
+    <div class="rule">
+      <span class="line"></span>
+      <span class="mark">〜</span>
+      <span class="line"></span>
+    </div>
+    <div class="body">
+      <p class="name">Chao Ivans</p>
+      <p class="year">© {year}</p>
+    </div>
+  </div>
+</footer>
+<style>
+  .footer { padding: 0 1.5rem 2.5rem; }
+  .inner { max-width: 860px; margin: 0 auto; }
+  .rule { display: flex; align-items: center; gap: .8rem; margin-bottom: 1.4rem; }
+  .line { flex: 1; height: 1px; background: var(--ink-line); }
+  .mark { color: var(--teal); opacity: .4; font-size: .9rem; }
+  .body { display: flex; justify-content: space-between; }
+  .name { font-family: var(--display); font-style: italic; font-size: .85rem; color: var(--fog-ghost); }
+  .year { font-family: var(--mono); font-size: .62rem; color: var(--fog-ghost); opacity: .5; }
+</style>

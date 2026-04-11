@@ -1,0 +1,388 @@
+---
+export const prerender = false;
+
+import Layout     from '../layouts/Layout.astro';
+import { getAllPuisi } from '../lib/supabase.js';
+
+// Auth check
+const isLoggedIn = Astro.cookies.get('admin_session')?.value === 'ok';
+
+// Query params untuk toast
+const params  = Astro.url.searchParams;
+const hasOk   = params.get('ok');
+const hasErr  = params.get('err');
+const hasError = params.get('error'); // login error
+
+// Load poems jika sudah login
+const puisiList = isLoggedIn ? await getAllPuisi() : [];
+
+function formatTgl(str: string) {
+  return new Date(str).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+// Default tanggal hari ini
+const today = new Date().toISOString().split('T')[0];
+---
+
+<Layout title="Admin — Chao Ivans">
+  <div class="page">
+
+    {/* ─── LOGIN SCREEN ─── */}
+    {!isLoggedIn && (
+      <div class="login-wrap">
+        <div class="login-box">
+          <div class="login-logo">
+            <span class="login-mark">〜</span>
+            <span class="login-name">Chao Ivans</span>
+          </div>
+          <h1 class="login-title">Admin</h1>
+          <p class="login-sub">Masukkan password untuk lanjut</p>
+
+          {hasError && (
+            <div class="alert alert-err">Password salah. Coba lagi.</div>
+          )}
+
+          <form method="POST" action="/api/login" class="login-form">
+            <input
+              type="password"
+              name="password"
+              class="login-input"
+              placeholder="Password"
+              autocomplete="current-password"
+              autofocus
+              required
+            />
+            <button type="submit" class="login-btn">Masuk →</button>
+          </form>
+        </div>
+      </div>
+    )}
+
+    {/* ─── ADMIN DASHBOARD ─── */}
+    {isLoggedIn && (
+      <div class="admin-wrap">
+
+        {/* Header */}
+        <header class="admin-header">
+          <div class="admin-header-inner">
+            <div class="admin-brand">
+              <span class="brand-mark">〜</span>
+              <span class="brand-name">Chao Ivans</span>
+              <span class="brand-tag">Admin</span>
+            </div>
+            <div class="admin-header-right">
+              <a href="/" target="_blank" class="hbtn hbtn-ghost">Lihat Website ↗</a>
+              <form method="POST" action="/api/logout" style="display:inline">
+                <button type="submit" class="hbtn hbtn-out">Keluar</button>
+              </form>
+            </div>
+          </div>
+        </header>
+
+        <main class="admin-main">
+
+          {/* Toast */}
+          {hasOk === 'tambah' && <div class="toast toast-ok">✓ Puisi berhasil ditambahkan!</div>}
+          {hasOk === 'hapus'  && <div class="toast toast-ok">✓ Puisi berhasil dihapus.</div>}
+          {hasErr             && <div class="toast toast-err">✕ Terjadi kesalahan. Coba lagi.</div>}
+
+          <div class="admin-grid">
+
+            {/* ── FORM TAMBAH ── */}
+            <section class="card">
+              <h2 class="card-title">Tambah Puisi Baru</h2>
+
+              <form method="POST" action="/api/tambah-puisi" class="poem-form">
+                <div class="field">
+                  <label class="label" for="judul">Judul</label>
+                  <input id="judul" name="judul" type="text" class="input" placeholder="Nama puisi…" required />
+                </div>
+
+                <div class="field">
+                  <label class="label" for="tanggal">Tanggal</label>
+                  <input id="tanggal" name="tanggal" type="date" class="input" value={today} required />
+                </div>
+
+                <div class="field">
+                  <label class="label" for="pengantar">
+                    Pengantar
+                    <span class="label-opt">— opsional</span>
+                  </label>
+                  <input id="pengantar" name="pengantar" type="text" class="input" placeholder="Satu kalimat tentang puisi ini…" />
+                </div>
+
+                <div class="field">
+                  <label class="label" for="isi">
+                    Isi Puisi
+                    <span class="label-opt">— baris kosong = bait baru</span>
+                  </label>
+                  <textarea id="isi" name="isi" class="textarea" rows="14" placeholder={"Baris satu bait pertama\nBaris dua bait pertama\n\nBaris satu bait kedua\nBaris dua bait kedua"} required></textarea>
+                </div>
+
+                <button type="submit" class="submit-btn">Simpan Puisi</button>
+              </form>
+            </section>
+
+            {/* ── DAFTAR PUISI ── */}
+            <section class="card">
+              <div class="list-head">
+                <h2 class="card-title">Puisi Tersimpan</h2>
+                <span class="list-count">{puisiList.length} puisi</span>
+              </div>
+
+              {puisiList.length === 0 && (
+                <p class="list-empty">Belum ada puisi. Tambah puisi pertamamu!</p>
+              )}
+
+              <div class="poem-list">
+                {puisiList.map(p => (
+                  <div class="poem-row">
+                    <div class="poem-info">
+                      <a href={`/puisi/${p.slug}`} target="_blank" class="poem-judul">{p.judul}</a>
+                      <span class="poem-tgl">{formatTgl(p.tanggal)}</span>
+                    </div>
+                    <div class="poem-actions">
+                      <a href={`/puisi/${p.slug}`} target="_blank" class="action-btn" title="Baca">→</a>
+                      <form method="POST" action="/api/hapus-puisi" onsubmit="return confirm('Hapus puisi ini?')">
+                        <input type="hidden" name="id" value={p.id} />
+                        <button type="submit" class="action-btn action-del" title="Hapus">✕</button>
+                      </form>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+          </div>
+        </main>
+      </div>
+    )}
+
+  </div>
+</Layout>
+
+<style>
+  .page { min-height: 100vh; background: var(--ink); }
+
+  /* ── LOGIN ── */
+  .login-wrap {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1.5rem;
+  }
+  .login-box {
+    width: 100%;
+    max-width: 360px;
+    text-align: center;
+  }
+  .login-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    margin-bottom: 2rem;
+  }
+  .login-mark { color: var(--teal); font-size: 1.2rem; }
+  .login-name { font-family: var(--display); font-size: 1.2rem; font-weight: 400; color: var(--fog); }
+
+  .login-title {
+    font-family: var(--display);
+    font-size: 1.8rem;
+    font-weight: 400;
+    font-style: italic;
+    color: var(--fog);
+    margin-bottom: .4rem;
+  }
+  .login-sub {
+    font-family: var(--mono);
+    font-size: .62rem;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    color: var(--fog-ghost);
+    margin-bottom: 2rem;
+  }
+  .alert {
+    font-family: var(--mono);
+    font-size: .68rem;
+    padding: .6rem .9rem;
+    border-radius: 3px;
+    margin-bottom: 1rem;
+    text-align: left;
+  }
+  .alert-err { background: rgba(255,80,80,.08); border: 1px solid rgba(255,80,80,.25); color: #ff8080; }
+
+  .login-form { display: flex; flex-direction: column; gap: .75rem; }
+  .login-input {
+    width: 100%;
+    background: var(--ink-card);
+    border: 1px solid var(--ink-line);
+    border-radius: 3px;
+    color: var(--fog);
+    font-family: var(--mono);
+    font-size: .9rem;
+    padding: .75rem 1rem;
+    outline: none;
+    text-align: center;
+    letter-spacing: .1em;
+    transition: border-color .2s;
+  }
+  .login-input:focus { border-color: rgba(0,212,184,.4); }
+  .login-btn {
+    font-family: var(--mono);
+    font-size: .72rem;
+    text-transform: uppercase;
+    letter-spacing: .14em;
+    color: var(--ink);
+    background: var(--teal);
+    border: none;
+    border-radius: 3px;
+    padding: .75rem;
+    cursor: pointer;
+    transition: background .2s;
+  }
+  .login-btn:hover { background: #1ffff0; }
+
+  /* ── ADMIN DASHBOARD ── */
+  .admin-wrap { display: flex; flex-direction: column; min-height: 100vh; }
+
+  .admin-header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(9,9,9,.9);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--ink-line);
+  }
+  .admin-header-inner {
+    max-width: 1100px; margin: 0 auto;
+    padding: 0 1.5rem; height: 58px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .admin-brand { display: flex; align-items: center; gap: .5rem; }
+  .brand-mark  { color: var(--teal); font-size: 1rem; }
+  .brand-name  { font-family: var(--display); font-size: .95rem; color: var(--fog); }
+  .brand-tag   {
+    font-family: var(--mono); font-size: .55rem; text-transform: uppercase;
+    letter-spacing: .12em; color: var(--teal); background: var(--teal-faint);
+    border: 1px solid rgba(0,212,184,.2); padding: .15rem .45rem; border-radius: 2px;
+  }
+  .admin-header-right { display: flex; align-items: center; gap: .5rem; }
+  .hbtn {
+    font-family: var(--mono); font-size: .65rem; text-transform: uppercase;
+    letter-spacing: .1em; padding: .35rem .75rem; border-radius: 3px;
+    cursor: pointer; transition: all .2s; text-decoration: none;
+  }
+  .hbtn-ghost { color: var(--fog-dim); border: 1px solid var(--ink-line); background: none; }
+  .hbtn-ghost:hover { color: var(--fog); border-color: var(--fog-ghost); }
+  .hbtn-out   { color: #ff8080; border: 1px solid rgba(255,80,80,.2); background: none; }
+  .hbtn-out:hover { background: rgba(255,80,80,.06); }
+
+  .admin-main { flex: 1; max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem 4rem; width: 100%; }
+
+  /* Toast */
+  .toast {
+    font-family: var(--mono); font-size: .72rem; letter-spacing: .06em;
+    padding: .65rem 1rem; border-radius: 3px; margin-bottom: 1.5rem;
+  }
+  .toast-ok  { background: rgba(0,212,184,.08); border: 1px solid rgba(0,212,184,.2); color: var(--teal); }
+  .toast-err { background: rgba(255,80,80,.08); border: 1px solid rgba(255,80,80,.2); color: #ff8080; }
+
+  /* Grid */
+  .admin-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  @media (min-width: 860px) {
+    .admin-grid { grid-template-columns: 1fr 1fr; align-items: start; }
+  }
+
+  /* Card */
+  .card {
+    background: var(--ink-card);
+    border: 1px solid var(--ink-line);
+    border-radius: 5px;
+    padding: 1.75rem;
+  }
+  .card-title {
+    font-family: var(--display);
+    font-size: 1.1rem;
+    font-weight: 400;
+    font-style: italic;
+    color: var(--fog);
+    margin-bottom: 1.5rem;
+    padding-bottom: .75rem;
+    border-bottom: 1px solid var(--ink-line);
+  }
+
+  /* Form */
+  .poem-form { display: flex; flex-direction: column; gap: 1.1rem; }
+  .field     { display: flex; flex-direction: column; gap: .4rem; }
+  .label {
+    font-family: var(--mono); font-size: .6rem; text-transform: uppercase;
+    letter-spacing: .12em; color: var(--fog-dim);
+  }
+  .label-opt { opacity: .5; text-transform: none; letter-spacing: 0; margin-left: .3rem; font-size: .58rem; }
+
+  .input, .textarea {
+    width: 100%;
+    background: var(--ink-raised);
+    border: 1px solid var(--ink-line);
+    border-radius: 3px;
+    color: var(--fog);
+    font-family: var(--serif);
+    font-size: 1rem;
+    padding: .65rem .85rem;
+    outline: none;
+    transition: border-color .2s;
+    -webkit-appearance: none;
+  }
+  .input:focus, .textarea:focus { border-color: rgba(0,212,184,.35); }
+  .input::placeholder, .textarea::placeholder { color: var(--fog-ghost); opacity: .6; }
+  .textarea { resize: vertical; min-height: 220px; line-height: 1.8; }
+  input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(.4); cursor: pointer; }
+
+  .submit-btn {
+    font-family: var(--mono); font-size: .72rem; text-transform: uppercase;
+    letter-spacing: .14em; color: var(--ink); background: var(--teal);
+    border: none; border-radius: 3px; padding: .75rem;
+    cursor: pointer; transition: background .2s, box-shadow .2s; margin-top: .25rem;
+  }
+  .submit-btn:hover { background: #1ffff0; box-shadow: 0 0 20px var(--teal-glow); }
+
+  /* Poem list */
+  .list-head  { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 1rem; padding-bottom: .75rem; border-bottom: 1px solid var(--ink-line); }
+  .list-count { font-family: var(--mono); font-size: .6rem; text-transform: uppercase; letter-spacing: .1em; color: var(--fog-ghost); }
+  .list-empty { font-family: var(--serif); font-style: italic; color: var(--fog-ghost); font-size: .9rem; padding: 1.5rem 0; text-align: center; opacity: .6; }
+
+  .poem-list { display: flex; flex-direction: column; gap: 1px; }
+
+  .poem-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: .75rem .5rem; gap: 1rem;
+    border-bottom: 1px solid var(--ink-line);
+    transition: background .15s; border-radius: 2px;
+  }
+  .poem-row:last-child { border-bottom: none; }
+  .poem-row:hover { background: var(--ink-raised); }
+
+  .poem-info   { display: flex; flex-direction: column; gap: .15rem; min-width: 0; }
+  .poem-judul  {
+    font-family: var(--display); font-style: italic; font-size: .95rem;
+    color: var(--fog); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    transition: color .2s;
+  }
+  .poem-judul:hover { color: var(--teal); }
+  .poem-tgl    { font-family: var(--mono); font-size: .58rem; color: var(--fog-ghost); letter-spacing: .05em; }
+
+  .poem-actions { display: flex; align-items: center; gap: .35rem; flex-shrink: 0; }
+  .action-btn {
+    font-family: var(--mono); font-size: .75rem;
+    color: var(--fog-ghost); background: none;
+    border: 1px solid var(--ink-line); border-radius: 3px;
+    padding: .25rem .5rem; cursor: pointer; transition: all .2s; text-decoration: none;
+    display: inline-flex; align-items: center;
+  }
+  .action-btn:hover  { color: var(--fog); border-color: var(--fog-ghost); }
+  .action-del:hover  { color: #ff8080; border-color: rgba(255,80,80,.3); background: rgba(255,80,80,.06); }
+</style>

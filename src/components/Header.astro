@@ -1,0 +1,43 @@
+---
+const { currentPath = '/' } = Astro.props;
+---
+<header class="header">
+  <div class="inner">
+    <a href="/" class="logo">
+      <span class="logo-mark">〜</span>
+      <span class="logo-name">Chao Ivans</span>
+    </a>
+    <nav class="nav">
+      <a href="/"       class:list={['link', { active: currentPath === '/' }]}>Beranda</a>
+      <a href="/semua"  class:list={['link', { active: currentPath === '/semua' }]}>Karya</a>
+      <a href="/tentang" class:list={['link', { active: currentPath === '/tentang' }]}>Tentang</a>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(9,9,9,0.88);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--ink-line);
+  }
+  .inner {
+    max-width: 860px; margin: 0 auto;
+    padding: 0 1.5rem; height: 60px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .logo { display: flex; align-items: center; gap: 0.5rem; transition: opacity .2s; }
+  .logo:hover { opacity: .7; }
+  .logo-mark { color: var(--teal); font-size: 1.1rem; }
+  .logo-name { font-family: var(--display); font-size: 1.05rem; font-weight: 400; letter-spacing: .04em; }
+  .nav { display: flex; gap: .1rem; }
+  .link {
+    font-family: var(--mono); font-size: .72rem; letter-spacing: .08em;
+    color: var(--fog-dim); padding: .35rem .7rem; border-radius: 3px;
+    transition: color .2s, background .2s;
+  }
+  .link:hover { color: var(--fog); background: var(--ink-raised); }
+  .link.active { color: var(--teal); background: var(--teal-faint); }
+</style>
