@@ -14,6 +14,10 @@ const total = (await getAllPuisi()).length;
         <div class="wrap">
 
           <div class="hero">
+            <div class="foto-wrap">
+              <img src="/chaoivans.jpg" alt="Chao Ivans" class="foto" />
+              <div class="foto-glow"></div>
+            </div>
             <h1 class="name">Chao Ivans</h1>
             <div class="rule"><span></span><span class="m">〜</span><span></span></div>
           </div>
@@ -24,8 +28,8 @@ const total = (await getAllPuisi()).length;
           </blockquote>
 
           <div class="bio">
-            <p>Ini adalah ruang pribadi untuk menulis dan menyimpan puisi. Setiap baris lahir dari pengamatan — hujan di luar jendela, keramaian kota yang sunyi, percakapan dalam hati, dan momen-momen kecil yang terasa besar.</p>
-            <p>Puisi bukan sekadar kata-kata. Ia adalah cara untuk berdiam sejenak, merasakan sesuatu dengan lebih penuh, dan menemukan bahasa bagi hal-hal yang selama ini tak terucapkan.</p>
+            <p>Ini adalah ruang pribadi untuk menulis apapun yang ada di dalam pikiranku. Setiap baris lahir dari pengamatan hujan di luar jendela, keramaian kota yang sunyi, percakapan dalam hati, dan momen-momen kecil yang terasa besar.</p>
+            <p>Menulis  adalah cara untuk berdiam sejenak, merasakan sesuatu dengan lebih penuh, dan menemukan bahasa bagi hal-hal yang selama ini tak terucapkan.</p>
           </div>
 
           <div class="stats">
@@ -48,6 +52,35 @@ const total = (await getAllPuisi()).length;
   .page{display:flex;flex-direction:column;min-height:100vh} main{flex:1}
   .container{max-width:640px;margin:0 auto;padding:4rem 1.5rem 6rem}
   .wrap{opacity:0;animation:fadeUp .7s .1s ease forwards}
+
+  /* FOTO */
+  .foto-wrap {
+    position: relative;
+    width: 110px;
+    height: 110px;
+    margin-bottom: 2rem;
+  }
+  .foto {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: center top;
+    border: 1px solid var(--ink-line);
+    filter: grayscale(20%);
+    display: block;
+    position: relative;
+    z-index: 1;
+    transition: filter .3s;
+  }
+  .foto:hover { filter: grayscale(0%); }
+  .foto-glow {
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,212,184,0.15) 0%, transparent 70%);
+    z-index: 0;
+  }
 
   .hero{margin-bottom:2.5rem}
   .name{font-family:var(--display);font-size:clamp(2.8rem,10vw,5rem);font-weight:400;line-height:1.1;letter-spacing:-.02em;color:var(--fog);margin-bottom:1.5rem}
