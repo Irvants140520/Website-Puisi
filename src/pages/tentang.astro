@@ -35,7 +35,7 @@ const total = (await getAllPuisi()).length;
           <div class="stats">
             <div class="stat"><span class="sn" id="cnt">{total}</span><span class="sl">Karya</span></div>
             <div class="sdiv">·</div>
-            <div class="stat"><span class="sn">2024</span><span class="sl">Dimulai</span></div>
+            <div class="stat"><span class="sn">2019</span><span class="sl">Dimulai</span></div>
             <div class="sdiv">·</div>
             <div class="stat"><span class="sn">ID</span><span class="sl">Bahasa</span></div>
           </div>
@@ -76,10 +76,22 @@ const total = (await getAllPuisi()).length;
   .foto:hover { filter: grayscale(0%); }
   .foto-glow {
     position: absolute;
-    inset: -4px;
+    inset: -15px;
+    background: var(--teal);
+    filter: blur(40px);
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(0,212,184,0.15) 0%, transparent 70%);
     z-index: 0;
+    
+    /* Ubah opacity awal menjadi sedikit lebih rendah */
+    opacity: 0.3; 
+    /* Tambahkan animasi 'breathe' yang berulang tanpa henti */
+    animation: breathe 7s ease-in-out infinite;
+  }
+
+  /* Tambahkan keyframes ini di bawah kelas .foto-glow */
+  @keyframes breathe {
+    0%, 100% { opacity: 0.3; transform: scale(0.95); }
+    50%      { opacity: 0.5; transform: scale(1.05); }
   }
 
   .hero{margin-bottom:2.5rem}
@@ -88,7 +100,7 @@ const total = (await getAllPuisi()).length;
   .rule span:first-child,.rule span:last-child{flex:1;height:1px;background:var(--ink-line)}
   .m{color:var(--teal);opacity:.4;font-size:1rem}
 
-  .quote{margin:2.5rem 0;padding:2rem 1.75rem;border-left:3px solid rgba(0,212,184,.4);background:linear-gradient(to right,var(--teal-faint),transparent 80%);border-radius:0 4px 4px 0}
+  .quote{margin:2.5rem 0;padding:2rem 1.75rem;border-left:3px solid var(--teal);background:linear-gradient(to right,var(--teal-faint),transparent 80%);border-radius:0 4px 4px 0}
   .quote p{font-family:var(--display);font-style:italic;font-size:clamp(1.1rem,3.5vw,1.4rem);font-weight:400;line-height:1.8;color:var(--fog-dim)}
   .q2{color:var(--fog)}
 

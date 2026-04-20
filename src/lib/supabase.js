@@ -37,3 +37,7 @@ export async function getPuisiBySlug(slug) {
   if (error) return null;
   return data;
 }
+
+export async function tambahView(slug) {
+  await supabase.rpc('increment_views', { puisi_slug: slug });
+}

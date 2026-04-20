@@ -24,7 +24,10 @@ const firstLine = (puisi.isi || '').trim().split('\n').find(l => l.trim()) || ''
     background: var(--ink-card);
     opacity: 0; transform: translateY(18px);
     animation: fadeUp .55s ease forwards;
-    transition: background .25s, transform .3s;
+    border-radius: 6px; /* Dari perbaikan kita sebelumnya */
+    
+    /* Ubah bagian transition menjadi 0.4s ease-out */
+    transition: background 0.4s ease-out, transform 0.4s ease-out;
   }
   .card:hover { background: var(--ink-raised); transform: translateY(-1px); }
   .inner { display: block; padding: 1.6rem 1.5rem 1.4rem; }

@@ -4,7 +4,6 @@ const { currentPath = '/' } = Astro.props;
 <header class="header">
   <div class="inner">
     <a href="/" class="logo">
-      <span class="logo-mark">〜</span>
       <span class="logo-name">Chao Ivans</span>
     </a>
     <nav class="nav">
@@ -16,13 +15,13 @@ const { currentPath = '/' } = Astro.props;
 </header>
 
 <style>
-  .header {
+    .header {
     position: sticky; top: 0; z-index: 100;
-    background: rgba(9,9,9,0.88);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--ink-line);
+    background: rgba(9,9,9,0.7); /* Lebih transparan */
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(201, 166, 107, 0.08); /* Garis emas yang sangat tipis */
   }
+
   .inner {
     max-width: 860px; margin: 0 auto;
     padding: 0 1.5rem; height: 60px;

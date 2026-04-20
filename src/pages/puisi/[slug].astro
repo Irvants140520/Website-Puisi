@@ -2,12 +2,14 @@
 import Layout  from '../../layouts/Layout.astro';
 import Header  from '../../components/Header.astro';
 import Footer  from '../../components/Footer.astro';
-import { getPuisiBySlug, getAllPuisi } from '../../lib/supabase.js';
+import { getPuisiBySlug, getAllPuisi, tambahView } from '../../lib/supabase.js';
 
 const { slug } = Astro.params;
 const puisi    = await getPuisiBySlug(slug);
 
 if (!puisi) return Astro.redirect('/404');
+
+await tambahView(slug);
 
 // Prev / next
 const semua = await getAllPuisi();
@@ -38,14 +40,20 @@ const pageUrl    = Astro.url.href;
           {puisi.pengantar && <p class="pengantar">{puisi.pengantar}</p>}
         </header>
 
-        <div class="rule"><span class="r-dash">—</span></div>
+        <div class="rule"><span class="r-dash">by Chao Ivans</span></div>
 
         <!-- Body -->
         <div class="body">
-          {paragraphs.map(p => <p class="stanza">{p}</p>)}
+          {paragraphs.map((p, index) => (
+            <p class="stanza" style={`animation-delay: ${0.2 + (index * 0.15)}s`}>
+              {p}
+            </p>
+          ))}
         </div>
 
-        <div class="end-mark">〜</div>
+        <div class="end-mark">
+          <span class="end-views">𓁹 {puisi.views ?? 0} kali dibaca</span>
+        </div>
 
         <!-- Share -->
         <div class="share">
@@ -123,7 +131,7 @@ const pageUrl    = Astro.url.href;
   .article { max-width:580px; margin:0 auto; padding:3.5rem 1.5rem 5rem; opacity:0; animation:fadeIn .6s .05s ease forwards; }
 
   /* head */
-  .date      { font-family:var(--mono); font-size:.6rem; letter-spacing:.14em; text-transform:uppercase; color:var(--fog-ghost); margin-bottom:1rem; }
+  .date      { font-family:var(--mono); font-size:.6rem; letter-spacing:.14em; text-transform:uppercase; color:var(--fog); margin-bottom:1rem; }
   .title     { font-family:var(--display); font-size:clamp(2rem,7vw,3rem); font-weight:400; line-height:1.15; color:var(--fog); margin-bottom:.9rem; }
   .pengantar { font-family:var(--serif); font-style:italic; font-size:.95rem; color:var(--fog-dim); line-height:1.7; }
   .poem-head { margin-bottom:2rem; }
@@ -134,10 +142,43 @@ const pageUrl    = Astro.url.href;
 
   /* body */
   .body { margin-bottom:3rem; }
-  .stanza { font-family:var(--serif); font-size:clamp(1.1rem,3.2vw,1.25rem); line-height:2.1; color:var(--fog); white-space:pre-line; margin-bottom:2.2rem; letter-spacing:.01em; }
-  .stanza:last-child { margin-bottom:0; }
+    /* Di dalam <style> pada [slug].astro */
+  .stanza:first-child::first-letter {
+    float: left;
+    font-family: var(--display);
+    font-size: 3.5rem;
+    line-height: 0.8;
+    padding-top: 4px;
+    padding-right: 10px;
+    color: var(--teal); /* Warna emas yang kita set tadi */
+  }
 
-  .end-mark { text-align:center; padding:2rem 0; color:var(--teal); opacity:.3; font-size:1.3rem; }
+  .stanza { font-family:var(--serif); font-size:1.15rem; line-height:2.1; color:var(--fog); white-space:pre-line; margin-bottom:2.5rem; letter-spacing:.01em; opacity: 0;
+    transform: translateY(10px);
+    animation: gentleFadeUp 0.8s ease forwards;
+  }
+
+  @keyframes gentleFadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }}
+  .stanza:last-child { margin-bottom:0;}
+
+  .end-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .6rem;
+  padding: 2rem 0;
+}
+
+  .end-teal { color:var(--teal); opacity:.3; font-size:1.3rem; }
+  .end-views {
+  font-family: var(--mono);
+  font-size: .58rem;
+  letter-spacing: .1em;
+  color: color:var(--fog);
+  opacity: .7;
+}
 
   /* share */
   .share { border:1px solid var(--ink-line); border-radius:4px; padding:1.25rem 1.4rem; margin-bottom:2.5rem; background:var(--ink-card); }

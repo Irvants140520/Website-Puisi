@@ -15,7 +15,39 @@ const {
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Inconsolata:wght@300;400&display=swap" rel="stylesheet" />
   <style is:global>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }, 
+    body {
+      background: var(--ink);
+      color: var(--fog);
+      font-family: var(--serif);
+      font-size: 17px;
+      line-height: 1.8;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      
+      /* Tambahkan dua baris ini untuk animasi masuk halaman */
+      opacity: 0;
+      animation: pageReveal 0.8s cubic-bezier(0.33, 1, 0.68, 1) forwards;
+    }
+
+    /* Tambahkan keyframes ini di bawahnya */
+    @keyframes pageReveal {
+      0% { opacity: 0; transform: translateY(8px); }
+      100% { opacity: 1; transform: translateY(0); }
+    },
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 9999;
+    pointer-events: none; /* Supaya tekstur tidak menghalangi kursor saat mengklik tautan */
+    opacity: 0.035; /* Sangat tipis, hanya sebagai bayangan emosi bawah sadar */
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
 
     :root {
       --ink:         #090909;
@@ -25,10 +57,10 @@ const {
       --fog:         #ede9e3;
       --fog-dim:     #837f79;
       --fog-ghost:   #3d3a36;
-      --teal:        #00d4b8;
-      --teal-soft:   #00a896;
-      --teal-glow:   rgba(0,212,184,0.10);
-      --teal-faint:  rgba(0,212,184,0.04);
+      --teal:        #c9a66b; 
+      --teal-soft:   #b39158;
+      --teal-glow:   rgba(201, 166, 107, 0.10);
+      --teal-faint:  rgba(201, 166, 107, 0.04);
       --display:     'Playfair Display', 'Times New Roman', serif;
       --serif:       'EB Garamond', Georgia, serif;
       --mono:        'Inconsolata', monospace;
@@ -48,7 +80,33 @@ const {
     }
 
     ::selection { background: var(--teal); color: var(--ink); }
-    a { color: inherit; text-decoration: none; }
+        /* Tambahkan/Ubah di <style is:global> pada Layout.astro */
+    a {
+      color: inherit;
+      text-decoration: none;
+      position: relative;
+    }
+
+    /* Efek garis bawah yang elegan */
+    .nav .link, .cta {
+      position: relative;
+    }
+
+    .nav .link::after, .cta::after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 1px;
+      bottom: -2px;
+      left: 0;
+      background-color: var(--teal);
+      transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .nav .link:hover::after, .cta:hover::after {
+      width: 100%;
+    }
+
 
     ::-webkit-scrollbar { width: 3px; }
     ::-webkit-scrollbar-track { background: var(--ink); }
