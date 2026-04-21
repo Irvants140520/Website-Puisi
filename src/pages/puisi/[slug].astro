@@ -11,7 +11,6 @@ if (!puisi) return Astro.redirect('/404');
 
 await tambahView(slug);
 
-// Prev / next
 const semua = await getAllPuisi();
 const idx   = semua.findIndex(p => p.slug === slug);
 const prev  = idx < semua.length - 1 ? semua[idx + 1] : null;
@@ -25,33 +24,49 @@ function formatTgl(str) {
 
 const paragraphs = puisi.isi.trim().split(/\n\n+/);
 const pageUrl    = Astro.url.href;
+
+// Estimasi waktu baca
+const wordCount  = puisi.isi.trim().split(/\s+/).length;
+const readMins   = Math.max(1, Math.round(wordCount / 80));
 ---
 
 <Layout title={`${puisi.judul} — Chao Ivans`} description={puisi.pengantar ?? ''}>
+
+  <!-- Reading progress bar -->
+  <div class="progress-bar" id="progress-bar" aria-hidden="true"></div>
+
   <div class="page">
     <Header />
     <main>
       <article class="article">
 
+        <!-- Ambient glow — konsisten dengan homepage -->
+        <div class="article-glow" aria-hidden="true"></div>
+
         <!-- Header -->
         <header class="poem-head">
           <p class="date">{formatTgl(puisi.tanggal)}</p>
           <h1 class="title">{puisi.judul}</h1>
+          <p class="read-time">{readMins} menit baca</p>
           {puisi.pengantar && <p class="pengantar">{puisi.pengantar}</p>}
         </header>
 
         <div class="rule"><span class="r-dash">by Chao Ivans</span></div>
 
-        <!-- Body -->
-        <div class="body">
-          {paragraphs.map((p, index) => (
-            <p class="stanza" style={`animation-delay: ${0.2 + (index * 0.15)}s`}>
+        <!-- Body — setiap stanza akan di-reveal saat scroll -->
+        <div class="body" id="poem-body">
+          {paragraphs.map((p, i) => (
+            <p
+              class={`stanza${i === 0 ? ' stanza-first' : ''}`}
+              data-stanza={i}
+            >
               {p}
             </p>
           ))}
         </div>
 
         <div class="end-mark">
+          <span class="end-dash">—</span>
           <span class="end-views">𓁹 {puisi.views ?? 0} kali dibaca</span>
         </div>
 
@@ -64,10 +79,10 @@ const pageUrl    = Astro.url.href;
               Bagikan
             </button>
             <button class="sbtn" id="btn-copy">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012 2v1"/></svg>
               <span id="copy-lbl">Salin Link</span>
             </button>
-            <a class="sbtn sbtn-wa" id="btn-wa" href={`https://wa.me/?text=${encodeURIComponent(`"${puisi.judul}" — Chao Ivans\n${pageUrl}`)}`} target="_blank" rel="noopener">
+            <a class="sbtn sbtn-wa" href={`https://wa.me/?text=${encodeURIComponent(`"${puisi.judul}" — Chao Ivans\n${pageUrl}`)}`} target="_blank" rel="noopener">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.138.562 4.144 1.541 5.876L0 24l6.303-1.519A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.893 0-3.671-.497-5.214-1.366l-.374-.219-3.742.902.938-3.651-.24-.386A9.946 9.946 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
               WhatsApp
             </a>
@@ -102,10 +117,55 @@ const pageUrl    = Astro.url.href;
 </Layout>
 
 <script>
-  const url   = window.location.href;
-  const title = document.querySelector('.title')?.textContent || '';
+  /* ── READING PROGRESS BAR ─────────────────────────── */
+  const bar = document.getElementById('progress-bar');
+  if (bar) {
+    const update = () => {
+      const scrolled  = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      bar.style.width = docHeight > 0 ? `${(scrolled / docHeight) * 100}%` : '0%';
+    };
+    window.addEventListener('scroll', update, { passive: true });
+    update();
+  }
 
-  // Native share (mobile)
+  /* ── SCROLL-TRIGGERED STANZA REVEAL ──────────────── */
+  const stanzas = document.querySelectorAll<HTMLElement>('.stanza');
+
+  // Set initial hidden state — tanpa CSS animation, biar kita kontrol via JS
+  stanzas.forEach((s) => {
+    s.style.opacity   = '0';
+    s.style.transform = 'translateY(18px)';
+    s.style.filter    = 'blur(6px)';
+    s.style.transition = 'opacity .9s cubic-bezier(.4,0,.2,1), transform .9s cubic-bezier(.4,0,.2,1), filter .9s cubic-bezier(.4,0,.2,1)';
+  });
+
+  const io = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const el = entry.target as HTMLElement;
+          // Sedikit delay acak biar tidak semua reveal serentak
+          const delay = parseFloat(el.dataset.stanza ?? '0') === 0 ? 0 : 80;
+          setTimeout(() => {
+            el.style.opacity   = '1';
+            el.style.transform = 'translateY(0)';
+            el.style.filter    = 'blur(0)';
+          }, delay);
+          io.unobserve(el);
+        }
+      });
+    },
+    // Trigger saat stanza 15% masuk layar
+    { threshold: 0.15 }
+  );
+
+  stanzas.forEach((s) => io.observe(s));
+
+  /* ── SHARE BUTTONS ────────────────────────────────── */
+  const url   = window.location.href;
+  const title = document.querySelector<HTMLElement>('.title')?.textContent || '';
+
   const btnNative = document.getElementById('btn-native');
   if (navigator.share && btnNative) {
     btnNative.addEventListener('click', () =>
@@ -115,90 +175,259 @@ const pageUrl    = Astro.url.href;
     btnNative.style.display = 'none';
   }
 
-  // Copy link
   document.getElementById('btn-copy')?.addEventListener('click', () => {
     navigator.clipboard.writeText(url).then(() => {
       const lbl = document.getElementById('copy-lbl');
-      if (lbl) { lbl.textContent = 'Tersalin!'; setTimeout(() => lbl.textContent = 'Salin Link', 2000); }
+      if (lbl) {
+        lbl.textContent = 'Tersalin!';
+        setTimeout(() => (lbl.textContent = 'Salin Link'), 2000);
+      }
     });
   });
 </script>
 
 <style>
+  /* ── BASE ─────────────────────────────────────────── */
   .page { display:flex; flex-direction:column; min-height:100vh; }
   main  { flex:1; }
 
-  .article { max-width:580px; margin:0 auto; padding:3.5rem 1.5rem 5rem; opacity:0; animation:fadeIn .6s .05s ease forwards; }
+  /* ── PROGRESS BAR ─────────────────────────────────── */
+  .progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 2px;
+    width: 0%;
+    background: linear-gradient(90deg, var(--teal), rgba(0,212,184,.4));
+    z-index: 1000;
+    transition: width .1s linear;
+    pointer-events: none;
+  }
 
-  /* head */
-  .date      { font-family:var(--mono); font-size:.6rem; letter-spacing:.14em; text-transform:uppercase; color:var(--fog); margin-bottom:1rem; }
-  .title     { font-family:var(--display); font-size:clamp(2rem,7vw,3rem); font-weight:400; line-height:1.15; color:var(--fog); margin-bottom:.9rem; }
-  .pengantar { font-family:var(--serif); font-style:italic; font-size:.95rem; color:var(--fog-dim); line-height:1.7; }
-  .poem-head { margin-bottom:2rem; }
+  /* ── ARTICLE ──────────────────────────────────────── */
+  .article {
+    position: relative;
+    max-width: 580px;
+    margin: 0 auto;
+    padding: 3.5rem 1.5rem 5rem;
+    opacity: 0;
+    animation: fadeIn .5s .05s ease forwards;
+    overflow: hidden;
+  }
 
-  .rule { margin:1.75rem 0 2rem; display:flex; align-items:center; gap:.75rem; }
-  .rule::before,.rule::after { content:''; flex:1; height:1px; background:var(--ink-line); }
-  .r-dash { color:var(--teal); opacity:.45; font-size:1.1rem; }
+  /* Ambient glow — sama seperti homepage */
+  .article-glow {
+    position: absolute;
+    width: 400px;
+    height: 400px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,212,184,.05) 0%, transparent 68%);
+    top: -60px;
+    right: -120px;
+    pointer-events: none;
+    animation: orbDrift 18s ease-in-out infinite alternate;
+  }
+  @keyframes orbDrift {
+    from { transform: translate(0,0) scale(1); }
+    to   { transform: translate(-20px, 30px) scale(1.08); }
+  }
 
-  /* body */
-  .body { margin-bottom:3rem; }
-    /* Di dalam <style> pada [slug].astro */
-  .stanza:first-child::first-letter {
+  /* ── POEM HEADER ──────────────────────────────────── */
+  .poem-head { margin-bottom: 2rem; position: relative; z-index: 1; }
+
+  .date {
+    font-family: var(--mono);
+    font-size: .6rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--fog-ghost);
+    margin-bottom: .75rem;
+    display: block;
+  }
+
+  .title {
+    font-family: var(--display);
+    font-size: clamp(2rem, 7vw, 3rem);
+    font-weight: 400;
+    line-height: 1.15;
+    color: var(--fog);
+    margin-bottom: .5rem;
+  }
+
+  .read-time {
+    font-family: var(--mono);
+    font-size: .58rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--teal);
+    opacity: .45;
+    margin-bottom: .9rem;
+  }
+
+  .pengantar {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: .95rem;
+    color: var(--fog-dim);
+    line-height: 1.7;
+    margin-top: .75rem;
+  }
+
+  /* ── RULE ─────────────────────────────────────────── */
+  .rule {
+    margin: 1.75rem 0 2rem;
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    position: relative;
+    z-index: 1;
+  }
+  .rule::before, .rule::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--ink-line);
+  }
+  .r-dash {
+    color: var(--teal);
+    opacity: .45;
+    font-size: 1.1rem;
+    white-space: nowrap;
+  }
+
+  /* ── POEM BODY ────────────────────────────────────── */
+  .body {
+    margin-bottom: 3rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Drop cap — hanya stanza pertama */
+  .stanza-first::first-letter {
     float: left;
     font-family: var(--display);
-    font-size: 3.5rem;
+    font-size: clamp(3rem, 12vw, 4.5rem);
     line-height: 0.8;
     padding-top: 4px;
     padding-right: 10px;
-    color: var(--teal); /* Warna emas yang kita set tadi */
+    color: var(--teal);
+    text-shadow: 0 0 20px rgba(0,212,184,.15);
   }
 
-  .stanza { font-family:var(--serif); font-size:1.15rem; line-height:2.1; color:var(--fog); white-space:pre-line; margin-bottom:2.5rem; letter-spacing:.01em; opacity: 0;
-    transform: translateY(10px);
-    animation: gentleFadeUp 0.8s ease forwards;
+  /* Stanza — state awal dikontrol JS, bukan CSS animation */
+  .stanza {
+    font-family: var(--serif);
+    font-size: 1.15rem;
+    line-height: 2.1;
+    color: var(--fog);
+    white-space: pre-line;
+    margin-bottom: 2.5rem;
+    letter-spacing: .01em;
+    /* opacity/transform/filter diset via JS */
   }
+  .stanza:last-child { margin-bottom: 0; }
 
-  @keyframes gentleFadeUp {
-    to { opacity: 1; transform: translateY(0); }
-  }}
-  .stanza:last-child { margin-bottom:0;}
-
+  /* ── END MARK ─────────────────────────────────────── */
   .end-mark {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: .6rem;
-  padding: 2rem 0;
-}
-
-  .end-teal { color:var(--teal); opacity:.3; font-size:1.3rem; }
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .75rem;
+    padding: 2rem 0;
+  }
+  .end-dash {
+    color: var(--teal);
+    opacity: .3;
+    font-size: 1.2rem;
+  }
   .end-views {
-  font-family: var(--mono);
-  font-size: .58rem;
-  letter-spacing: .1em;
-  color: color:var(--fog);
-  opacity: .7;
-}
+    font-family: var(--mono);
+    font-size: .58rem;
+    letter-spacing: .1em;
+    color: var(--fog-dim);   /* bug lama: "color: color:" — diperbaiki */
+    opacity: .6;
+  }
 
-  /* share */
-  .share { border:1px solid var(--ink-line); border-radius:4px; padding:1.25rem 1.4rem; margin-bottom:2.5rem; background:var(--ink-card); }
-  .share-label { font-family:var(--mono); font-size:.6rem; text-transform:uppercase; letter-spacing:.15em; color:var(--fog-ghost); margin-bottom:.85rem; }
-  .share-row { display:flex; flex-wrap:wrap; gap:.5rem; }
+  /* ── SHARE ────────────────────────────────────────── */
+  .share {
+    border: 1px solid var(--ink-line);
+    border-radius: 4px;
+    padding: 1.25rem 1.4rem;
+    margin-bottom: 2.5rem;
+    background: var(--ink-card);
+  }
+  .share-label {
+    font-family: var(--mono);
+    font-size: .6rem;
+    text-transform: uppercase;
+    letter-spacing: .15em;
+    color: var(--fog-ghost);
+    margin-bottom: .85rem;
+  }
+  .share-row { display: flex; flex-wrap: wrap; gap: .5rem; }
 
-  .sbtn { display:inline-flex; align-items:center; gap:.4rem; font-family:var(--mono); font-size:.65rem; letter-spacing:.08em; color:var(--fog-dim); background:var(--ink-raised); border:1px solid var(--ink-line); border-radius:3px; padding:.4rem .75rem; cursor:pointer; transition:color .2s,border-color .2s,background .2s; text-decoration:none; }
-  .sbtn:hover { color:var(--fog); border-color:var(--fog-ghost); }
-  .sbtn-wa:hover { color:#25d366; border-color:rgba(37,211,102,.3); background:rgba(37,211,102,.06); }
-  .sbtn-tw:hover { color:#1d9bf0; border-color:rgba(29,155,240,.3); background:rgba(29,155,240,.06); }
+  .sbtn {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-family: var(--mono);
+    font-size: .65rem;
+    letter-spacing: .08em;
+    color: var(--fog-dim);
+    background: var(--ink-raised);
+    border: 1px solid var(--ink-line);
+    border-radius: 3px;
+    padding: .4rem .75rem;
+    cursor: pointer;
+    transition: color .2s, border-color .2s, background .2s;
+    text-decoration: none;
+  }
+  .sbtn:hover            { color: var(--fog); border-color: var(--fog-ghost); }
+  .sbtn-wa:hover         { color: #25d366; border-color: rgba(37,211,102,.3); background: rgba(37,211,102,.06); }
+  .sbtn-tw:hover         { color: #1d9bf0; border-color: rgba(29,155,240,.3); background: rgba(29,155,240,.06); }
 
-  /* nav */
-  .pnav { display:grid; grid-template-columns:1fr auto 1fr; gap:.75rem; align-items:center; padding-top:2rem; border-top:1px solid var(--ink-line); }
-  .pnav-item { display:flex; flex-direction:column; gap:.2rem; padding:.65rem .75rem; border-radius:3px; border:1px solid transparent; transition:border-color .2s,background .2s; }
-  .pnav-item:hover { border-color:var(--ink-line); background:var(--ink-card); }
-  .pnav-prev { align-items:flex-start; }
-  .pnav-next { align-items:flex-end; text-align:right; }
-  .pnav-dir  { font-family:var(--mono); font-size:.58rem; text-transform:uppercase; letter-spacing:.1em; color:var(--teal-soft); opacity:.7; }
-  .pnav-title { font-family:var(--display); font-style:italic; font-size:.9rem; color:var(--fog-dim); transition:color .2s; }
-  .pnav-item:hover .pnav-title { color:var(--fog); }
-  .pnav-all { font-family:var(--mono); font-size:.6rem; text-transform:uppercase; letter-spacing:.1em; color:var(--fog-dim); text-align:center; padding:.5rem .75rem; border:1px solid var(--ink-line); border-radius:3px; white-space:nowrap; transition:all .2s; }
-  .pnav-all:hover { color:var(--teal); border-color:var(--teal-soft); background:var(--teal-faint); }
+  /* ── NAV ──────────────────────────────────────────── */
+  .pnav {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: .75rem;
+    align-items: center;
+    padding-top: 2rem;
+    border-top: 1px solid var(--ink-line);
+  }
+  .pnav-item {
+    display: flex;
+    flex-direction: column;
+    gap: .2rem;
+    padding: .65rem .75rem;
+    border-radius: 3px;
+    border: 1px solid transparent;
+    transition: border-color .2s, background .2s;
+  }
+  .pnav-item:hover   { border-color: var(--ink-line); background: var(--ink-card); }
+  .pnav-prev         { align-items: flex-start; }
+  .pnav-next         { align-items: flex-end; text-align: right; }
+  .pnav-dir          { font-family: var(--mono); font-size: .58rem; text-transform: uppercase; letter-spacing: .1em; color: var(--teal-soft); opacity: .7; }
+  .pnav-title        { font-family: var(--display); font-style: italic; font-size: .9rem; color: var(--fog-dim); transition: color .2s; }
+  .pnav-item:hover .pnav-title { color: var(--fog); }
+  .pnav-all {
+    font-family: var(--mono);
+    font-size: .6rem;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--fog-dim);
+    text-align: center;
+    padding: .5rem .75rem;
+    border: 1px solid var(--ink-line);
+    border-radius: 3px;
+    white-space: nowrap;
+    transition: all .2s;
+  }
+  .pnav-all:hover { color: var(--teal); border-color: var(--teal-soft); background: var(--teal-faint); }
+
+  /* ── KEYFRAMES ────────────────────────────────────── */
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
 </style>
