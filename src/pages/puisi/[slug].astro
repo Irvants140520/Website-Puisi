@@ -25,53 +25,62 @@ function formatTgl(str) {
 const paragraphs = puisi.isi.trim().split(/\n\n+/);
 const pageUrl    = Astro.url.href;
 
-// Estimasi waktu baca
 const wordCount  = puisi.isi.trim().split(/\s+/).length;
 const readMins   = Math.max(1, Math.round(wordCount / 80));
 ---
 
 <Layout title={`${puisi.judul} — Chao Ivans`} description={puisi.pengantar ?? ''}>
 
-  <!-- Reading progress bar -->
-  <div class="progress-bar" id="progress-bar" aria-hidden="true"></div>
+  <!-- Reading progress — glow line -->
+  <div class="progress-track" aria-hidden="true">
+    <div class="progress-bar" id="progress-bar"></div>
+    <div class="progress-glow" id="progress-glow"></div>
+  </div>
 
   <div class="page">
     <Header />
     <main>
-      <article class="article">
+      <article class="article" id="article">
 
-        <!-- Ambient glow — konsisten dengan homepage -->
+        <!-- Ambient glow — drift lebih lambat, lebih besar -->
         <div class="article-glow" aria-hidden="true"></div>
+        <div class="article-glow-2" aria-hidden="true"></div>
 
-        <!-- Header -->
-        <header class="poem-head">
-          <p class="date">{formatTgl(puisi.tanggal)}</p>
-          <h1 class="title">{puisi.judul}</h1>
-          <p class="read-time">{readMins} menit baca</p>
-          {puisi.pengantar && <p class="pengantar">{puisi.pengantar}</p>}
+        <!-- Header — reveal teatrikal -->
+        <header class="poem-head" id="poem-head">
+          <p class="date" data-reveal="up">{formatTgl(puisi.tanggal)}</p>
+          <h1 class="title" data-reveal="blur">{puisi.judul}</h1>
+          <p class="read-time" data-reveal="up">{readMins} menit baca</p>
+          {puisi.pengantar && <p class="pengantar" data-reveal="fade">{puisi.pengantar}</p>}
         </header>
 
-        <div class="rule"><span class="r-dash">by Chao Ivans</span></div>
+        <div class="rule" data-reveal="expand">
+          <span class="r-line r-left"></span>
+          <span class="r-dash">oleh Chao Ivans</span>
+          <span class="r-line r-right"></span>
+        </div>
 
-        <!-- Body — setiap stanza akan di-reveal saat scroll -->
+        <!-- Body — stanza muncul seperti gelombang -->
         <div class="body" id="poem-body">
           {paragraphs.map((p, i) => (
             <p
               class={`stanza${i === 0 ? ' stanza-first' : ''}`}
               data-stanza={i}
+              data-reveal="stanza"
             >
               {p}
             </p>
           ))}
         </div>
 
-        <div class="end-mark">
+        <!-- End mark — fade in terpisah -->
+        <div class="end-mark" data-reveal="up">
           <span class="end-dash">—</span>
           <span class="end-views">𓁹 {puisi.views ?? 0} kali dibaca</span>
         </div>
 
-        <!-- Share -->
-        <div class="share">
+        <!-- Share — slide up -->
+        <div class="share" data-reveal="up">
           <p class="share-label">Bagikan puisi ini</p>
           <div class="share-row">
             <button class="sbtn" id="btn-native">
@@ -93,8 +102,8 @@ const readMins   = Math.max(1, Math.round(wordCount / 80));
           </div>
         </div>
 
-        <!-- Nav -->
-        <nav class="pnav">
+        <!-- Nav — parallax subtle -->
+        <nav class="pnav" data-reveal="up">
           {prev ? (
             <a href={`/puisi/${prev.slug}`} class="pnav-item pnav-prev">
               <span class="pnav-dir">← Sebelumnya</span>
@@ -116,55 +125,136 @@ const readMins   = Math.max(1, Math.round(wordCount / 80));
   </div>
 </Layout>
 
-<script>
-  /* ── READING PROGRESS BAR ─────────────────────────── */
+<!-- ════════════════════════════════════════════════════════
+     SCRIPT — Animation Engine
+     ════════════════════════════════════════════════════════ -->
+<script is:inline>
+(function() {
+  'use strict';
+  
+  const nextFrame = () => new Promise(r => requestAnimationFrame(r));
+  
+  /* ── 1. READING PROGRESS — Glow Line ───────────────── */
   const bar = document.getElementById('progress-bar');
-  if (bar) {
-    const update = () => {
-      const scrolled  = window.scrollY;
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-      bar.style.width = docHeight > 0 ? `${(scrolled / docHeight) * 100}%` : '0%';
-    };
-    window.addEventListener('scroll', update, { passive: true });
-    update();
+  const glow = document.getElementById('progress-glow');
+  
+  function updateProgress() {
+    const scrolled  = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = docHeight > 0 ? (scrolled / docHeight) * 100 : 0;
+    
+    if (bar) bar.style.width = `${pct}%`;
+    if (glow) {
+      glow.style.width = `${pct}%`;
+      // Glow intensifies saat scroll
+      glow.style.opacity = 0.3 + (pct / 200);
+    }
   }
+  
+  window.addEventListener('scroll', updateProgress, { passive: true });
+  updateProgress();
 
-  /* ── SCROLL-TRIGGERED STANZA REVEAL ──────────────── */
-  const stanzas = document.querySelectorAll<HTMLElement>('.stanza');
-
-  // Set initial hidden state — tanpa CSS animation, biar kita kontrol via JS
-  stanzas.forEach((s) => {
-    s.style.opacity   = '0';
-    s.style.transform = 'translateY(18px)';
-    s.style.filter    = 'blur(6px)';
-    s.style.transition = 'opacity .9s cubic-bezier(.4,0,.2,1), transform .9s cubic-bezier(.4,0,.2,1), filter .9s cubic-bezier(.4,0,.2,1)';
+  /* ── 2. SCROLL-TRIGGERED REVEAL ENGINE ─────────────── */
+  const revealElements = document.querySelectorAll('[data-reveal]');
+  
+  // Set initial states berdasarkan tipe
+  revealElements.forEach(el => {
+    const type = el.dataset.reveal;
+    el.classList.add(`reveal-${type}-hidden`);
   });
-
-  const io = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          const el = entry.target as HTMLElement;
-          // Sedikit delay acak biar tidak semua reveal serentak
-          const delay = parseFloat(el.dataset.stanza ?? '0') === 0 ? 0 : 80;
-          setTimeout(() => {
-            el.style.opacity   = '1';
-            el.style.transform = 'translateY(0)';
-            el.style.filter    = 'blur(0)';
-          }, delay);
-          io.unobserve(el);
-        }
+  
+  // Force reflow
+  nextFrame().then(() => {
+    revealElements.forEach(el => {
+      const type = el.dataset.reveal;
+      // Pasang transition setelah frame stabil
+      requestAnimationFrame(() => {
+        el.classList.add(`reveal-${type}-ready`);
       });
-    },
-    // Trigger saat stanza 15% masuk layar
-    { threshold: 0.15 }
-  );
+    });
+  });
+  
+  // IntersectionObserver untuk trigger
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const el = entry.target;
+        const type = el.dataset.reveal;
+        const delay = parseFloat(el.dataset.delay || 0);
+        
+        setTimeout(() => {
+          el.classList.remove(`reveal-${type}-hidden`);
+          el.classList.add(`reveal-${type}-visible`);
+        }, delay);
+        
+        revealObserver.unobserve(el);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -30px 0px' });
+  
+  revealElements.forEach(el => revealObserver.observe(el));
 
-  stanzas.forEach((s) => io.observe(s));
+  /* ── 3. STANZA WAVE REVEAL ─────────────────────────── */
+  const stanzas = document.querySelectorAll('.stanza[data-reveal="stanza"]');
+  
+  // Stanza punya reveal tersendiri — lebih dramatis
+  stanzas.forEach((s, i) => {
+    s.style.opacity = '0';
+    s.style.transform = 'translateY(35px) scale(0.98)';
+    s.style.filter = 'blur(8px)';
+    s.style.transition = 'none';
+  });
+  
+  nextFrame().then(() => {
+    stanzas.forEach(s => {
+      s.style.transition = `
+        opacity 1s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 1s cubic-bezier(0.22, 1, 0.36, 1),
+        filter 1.2s cubic-bezier(0.22, 1, 0.36, 1)
+      `;
+    });
+  });
+  
+  const stanzaObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const el = entry.target;
+        const idx = parseInt(el.dataset.stanza || 0);
+        
+        // Wave stagger — tiap stanza 180ms lebih lambat
+        setTimeout(() => {
+          el.style.opacity = '1';
+          el.style.transform = 'translateY(0) scale(1)';
+          el.style.filter = 'blur(0px)';
+        }, idx * 180);
+        
+        stanzaObserver.unobserve(el);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -50px 0px' });
+  
+  stanzas.forEach(s => stanzaObserver.observe(s));
 
-  /* ── SHARE BUTTONS ────────────────────────────────── */
+  /* ── 4. PARALLAX AMBIENT GLOWS ─────────────────────── */
+  const glow1 = document.querySelector('.article-glow');
+  const glow2 = document.querySelector('.article-glow-2');
+  let ticking = false;
+  
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        const y = window.scrollY;
+        if (glow1) glow1.style.transform = `translateY(${y * -0.04}px) translateX(${y * 0.02}px)`;
+        if (glow2) glow2.style.transform = `translateY(${y * 0.06}px) translateX(${y * -0.03}px)`;
+        ticking = false;
+      });
+      ticking = true;
+    }
+  }, { passive: true });
+
+  /* ── 5. SHARE BUTTONS ──────────────────────────────── */
   const url   = window.location.href;
-  const title = document.querySelector<HTMLElement>('.title')?.textContent || '';
+  const title = document.querySelector('.title')?.textContent || '';
 
   const btnNative = document.getElementById('btn-native');
   if (navigator.share && btnNative) {
@@ -184,55 +274,105 @@ const readMins   = Math.max(1, Math.round(wordCount / 80));
       }
     });
   });
+})();
 </script>
 
 <style>
-  /* ── BASE ─────────────────────────────────────────── */
+  /* ════════════════════════════════════════════════════════
+     BASE
+     ════════════════════════════════════════════════════════ */
   .page { display:flex; flex-direction:column; min-height:100vh; }
   main  { flex:1; }
 
-  /* ── PROGRESS BAR ─────────────────────────────────── */
-  .progress-bar {
+  /* Grain overlay — konsisten dengan beranda */
+  .page::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 180px 180px;
+    opacity: 0.035;
+    pointer-events: none;
+    z-index: 999;
+    animation: grainShift 0.5s steps(2) infinite;
+  }
+  @keyframes grainShift {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(-1px, 1px); }
+  }
+
+  /* ════════════════════════════════════════════════════════
+     PROGRESS BAR — Glow Line
+     ════════════════════════════════════════════════════════ */
+  .progress-track {
     position: fixed;
     top: 0;
     left: 0;
+    right: 0;
     height: 2px;
-    width: 0%;
-    background: linear-gradient(90deg, var(--teal), rgba(0,212,184,.4));
     z-index: 1000;
-    transition: width .1s linear;
     pointer-events: none;
+    background: rgba(0, 212, 184, 0.05);
+  }
+  
+  .progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--teal), rgba(0,212,184,.6));
+    transition: width 0.15s linear;
+  }
+  
+  .progress-glow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, transparent, var(--teal), transparent);
+    filter: blur(4px);
+    opacity: 0.3;
+    transition: width 0.15s linear, opacity 0.3s ease;
   }
 
-  /* ── ARTICLE ──────────────────────────────────────── */
+  /* ════════════════════════════════════════════════════════
+     ARTICLE
+     ════════════════════════════════════════════════════════ */
   .article {
     position: relative;
     max-width: 580px;
     margin: 0 auto;
     padding: 3.5rem 1.5rem 5rem;
-    opacity: 0;
-    animation: fadeIn .5s .05s ease forwards;
     overflow: hidden;
   }
 
-  /* Ambient glow — sama seperti homepage */
+  /* Dual ambient glow — bergerak berlawanan */
   .article-glow {
+    position: absolute;
+    width: 500px;
+    height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,212,184,.04) 0%, transparent 70%);
+    top: -80px;
+    right: -150px;
+    pointer-events: none;
+    will-change: transform;
+  }
+  
+  .article-glow-2 {
     position: absolute;
     width: 400px;
     height: 400px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(0,212,184,.05) 0%, transparent 68%);
-    top: -60px;
-    right: -120px;
+    background: radial-gradient(circle, rgba(0,212,184,.03) 0%, transparent 65%);
+    bottom: 20%;
+    left: -200px;
     pointer-events: none;
-    animation: orbDrift 18s ease-in-out infinite alternate;
-  }
-  @keyframes orbDrift {
-    from { transform: translate(0,0) scale(1); }
-    to   { transform: translate(-20px, 30px) scale(1.08); }
+    will-change: transform;
   }
 
-  /* ── POEM HEADER ──────────────────────────────────── */
+  /* ════════════════════════════════════════════════════════
+     POEM HEADER — Reveal States
+     ════════════════════════════════════════════════════════ */
   .poem-head { margin-bottom: 2rem; position: relative; z-index: 1; }
 
   .date {
@@ -245,6 +385,7 @@ const readMins   = Math.max(1, Math.round(wordCount / 80));
     display: block;
   }
 
+  /* TITLE — Blur Reveal */
   .title {
     font-family: var(--display);
     font-size: clamp(2rem, 7vw, 3rem);
@@ -252,6 +393,27 @@ const readMins   = Math.max(1, Math.round(wordCount / 80));
     line-height: 1.15;
     color: var(--fog);
     margin-bottom: .5rem;
+    will-change: transform, filter, opacity;
+  }
+  
+  .reveal-blur-hidden {
+    opacity: 0;
+    filter: blur(16px) brightness(2);
+    transform: translateY(30px) scale(0.95);
+  }
+  
+  .reveal-blur-ready {
+    transition: 
+      opacity 1s cubic-bezier(0.22, 1, 0.36, 1),
+      filter 1.4s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 1s cubic-bezier(0.22, 1, 0.36, 1),
+      color 0.6s ease;
+  }
+  
+  .reveal-blur-visible {
+    opacity: 1;
+    filter: blur(0px) brightness(1);
+    transform: translateY(0) scale(1);
   }
 
   .read-time {
@@ -273,7 +435,9 @@ const readMins   = Math.max(1, Math.round(wordCount / 80));
     margin-top: .75rem;
   }
 
-  /* ── RULE ─────────────────────────────────────────── */
+  /* ════════════════════════════════════════════════════════
+     RULE — Expand dari tengah
+     ════════════════════════════════════════════════════════ */
   .rule {
     margin: 1.75rem 0 2rem;
     display: flex;
@@ -282,27 +446,47 @@ const readMins   = Math.max(1, Math.round(wordCount / 80));
     position: relative;
     z-index: 1;
   }
-  .rule::before, .rule::after {
-    content: '';
+  
+  .r-line {
     flex: 1;
     height: 1px;
     background: var(--ink-line);
+    transform-origin: center;
+    transition: transform 1s cubic-bezier(0.22, 1, 0.36, 1);
   }
+  
+  .reveal-expand-hidden .r-left { transform: scaleX(0); transform-origin: right; }
+  .reveal-expand-hidden .r-right { transform: scaleX(0); transform-origin: left; }
+  .reveal-expand-visible .r-left,
+  .reveal-expand-visible .r-right { transform: scaleX(1); }
+  
+  .reveal-expand-hidden .r-dash {
+    opacity: 0;
+    transform: scale(0.8);
+    transition: opacity 0.6s 0.4s ease, transform 0.6s 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .reveal-expand-visible .r-dash {
+    opacity: 1;
+    transform: scale(1);
+  }
+  
   .r-dash {
     color: var(--teal);
-    opacity: .45;
+    opacity: 0.15;
     font-size: 1.1rem;
     white-space: nowrap;
   }
 
-  /* ── POEM BODY ────────────────────────────────────── */
+  /* ════════════════════════════════════════════════════════
+     POEM BODY — Stanza
+     ════════════════════════════════════════════════════════ */
   .body {
     margin-bottom: 3rem;
     position: relative;
     z-index: 1;
   }
 
-  /* Drop cap — hanya stanza pertama */
+  /* Drop cap — stanza pertama */
   .stanza-first::first-letter {
     float: left;
     font-family: var(--display);
@@ -314,7 +498,6 @@ const readMins   = Math.max(1, Math.round(wordCount / 80));
     text-shadow: 0 0 20px rgba(0,212,184,.15);
   }
 
-  /* Stanza — state awal dikontrol JS, bukan CSS animation */
   .stanza {
     font-family: var(--serif);
     font-size: 1.15rem;
@@ -323,11 +506,40 @@ const readMins   = Math.max(1, Math.round(wordCount / 80));
     white-space: pre-line;
     margin-bottom: 2.5rem;
     letter-spacing: .01em;
-    /* opacity/transform/filter diset via JS */
+    will-change: transform, filter, opacity;
   }
   .stanza:last-child { margin-bottom: 0; }
 
-  /* ── END MARK ─────────────────────────────────────── */
+  /* ════════════════════════════════════════════════════════
+     REVEAL UTILITIES — Up & Fade
+     ════════════════════════════════════════════════════════ */
+  .reveal-up-hidden {
+    opacity: 0;
+    transform: translateY(25px);
+  }
+  .reveal-up-ready {
+    transition: 
+      opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .reveal-up-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .reveal-fade-hidden {
+    opacity: 0;
+  }
+  .reveal-fade-ready {
+    transition: opacity 1s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .reveal-fade-visible {
+    opacity: 1;
+  }
+
+  /* ════════════════════════════════════════════════════════
+     END MARK
+     ════════════════════════════════════════════════════════ */
   .end-mark {
     display: flex;
     align-items: center;
@@ -344,11 +556,13 @@ const readMins   = Math.max(1, Math.round(wordCount / 80));
     font-family: var(--mono);
     font-size: .58rem;
     letter-spacing: .1em;
-    color: var(--fog-dim);   /* bug lama: "color: color:" — diperbaiki */
+    color: var(--fog-dim);
     opacity: .6;
   }
 
-  /* ── SHARE ────────────────────────────────────────── */
+  /* ════════════════════════════════════════════════════════
+     SHARE
+     ════════════════════════════════════════════════════════ */
   .share {
     border: 1px solid var(--ink-line);
     border-radius: 4px;
@@ -379,14 +593,28 @@ const readMins   = Math.max(1, Math.round(wordCount / 80));
     border-radius: 3px;
     padding: .4rem .75rem;
     cursor: pointer;
-    transition: color .2s, border-color .2s, background .2s;
+    transition: color .2s, border-color .2s, background .2s, transform .2s;
     text-decoration: none;
   }
-  .sbtn:hover            { color: var(--fog); border-color: var(--fog-ghost); }
-  .sbtn-wa:hover         { color: #25d366; border-color: rgba(37,211,102,.3); background: rgba(37,211,102,.06); }
-  .sbtn-tw:hover         { color: #1d9bf0; border-color: rgba(29,155,240,.3); background: rgba(29,155,240,.06); }
+  .sbtn:hover {
+    color: var(--fog);
+    border-color: var(--fog-ghost);
+    transform: translateY(-1px);
+  }
+  .sbtn-wa:hover {
+    color: #25d366;
+    border-color: rgba(37,211,102,.3);
+    background: rgba(37,211,102,.06);
+  }
+  .sbtn-tw:hover {
+    color: #1d9bf0;
+    border-color: rgba(29,155,240,.3);
+    background: rgba(29,155,240,.06);
+  }
 
-  /* ── NAV ──────────────────────────────────────────── */
+  /* ════════════════════════════════════════════════════════
+     NAV
+     ════════════════════════════════════════════════════════ */
   .pnav {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
@@ -402,13 +630,30 @@ const readMins   = Math.max(1, Math.round(wordCount / 80));
     padding: .65rem .75rem;
     border-radius: 3px;
     border: 1px solid transparent;
-    transition: border-color .2s, background .2s;
+    transition: border-color .2s, background .2s, transform .2s;
   }
-  .pnav-item:hover   { border-color: var(--ink-line); background: var(--ink-card); }
-  .pnav-prev         { align-items: flex-start; }
-  .pnav-next         { align-items: flex-end; text-align: right; }
-  .pnav-dir          { font-family: var(--mono); font-size: .58rem; text-transform: uppercase; letter-spacing: .1em; color: var(--teal-soft); opacity: .7; }
-  .pnav-title        { font-family: var(--display); font-style: italic; font-size: .9rem; color: var(--fog-dim); transition: color .2s; }
+  .pnav-item:hover {
+    border-color: var(--ink-line);
+    background: var(--ink-card);
+    transform: translateY(-2px);
+  }
+  .pnav-prev { align-items: flex-start; }
+  .pnav-next { align-items: flex-end; text-align: right; }
+  .pnav-dir {
+    font-family: var(--mono);
+    font-size: .58rem;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--teal-soft);
+    opacity: .7;
+  }
+  .pnav-title {
+    font-family: var(--display);
+    font-style: italic;
+    font-size: .9rem;
+    color: var(--fog-dim);
+    transition: color .2s;
+  }
   .pnav-item:hover .pnav-title { color: var(--fog); }
   .pnav-all {
     font-family: var(--mono);
@@ -423,11 +668,19 @@ const readMins   = Math.max(1, Math.round(wordCount / 80));
     white-space: nowrap;
     transition: all .2s;
   }
-  .pnav-all:hover { color: var(--teal); border-color: var(--teal-soft); background: var(--teal-faint); }
-
-  /* ── KEYFRAMES ────────────────────────────────────── */
+  .pnav-all:hover {
+    color: var(--teal);
+    border-color: var(--teal-soft);
+    background: var(--teal-faint);
+    transform: translateY(-2px);
+  }
+  
+    /* ════════════════════════════════════════════════════════
+     KEYFRAMES
+     ════════════════════════════════════════════════════════ */
   @keyframes fadeIn {
     from { opacity: 0; }
     to   { opacity: 1; }
   }
 </style>
+    

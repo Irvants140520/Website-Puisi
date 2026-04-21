@@ -6,60 +6,406 @@ import { getAllPuisi } from '../lib/supabase.js';
 
 const total = (await getAllPuisi()).length;
 ---
+
 <Layout title="Tentang — Chao Ivans">
   <div class="page">
     <Header currentPath="/tentang" />
     <main>
       <div class="container">
-        <div class="wrap">
 
-          <div class="hero">
-            <div class="foto-wrap">
-              <img src="/chaoivans.jpg" alt="Chao Ivans" class="foto" />
-              <div class="foto-glow"></div>
-            </div>
-            <h1 class="name">Chao Ivans</h1>
-            <div class="rule"><span></span><span class="m">〜</span><span></span></div>
+        <!-- Foto & Nama -->
+        <div class="hero-section" id="hero-section">
+          <div class="foto-wrap" data-reveal="glow">
+            <img src="/chaoivans.jpg" alt="Chao Ivans" class="foto" id="profile-foto" />
+            <div class="foto-glow" id="foto-glow"></div>
           </div>
-
-          <blockquote class="quote">
-            <p>Membaca untuk mengenal dunia</p>
-            <p class="q2">Dan menulis untuk dikenal dunia.</p>
-          </blockquote>
-
-          <div class="bio">
-            <p>Ini adalah ruang pribadi untuk menulis apapun yang ada di dalam pikiranku. Setiap baris lahir dari pengamatan hujan di luar jendela, keramaian kota yang sunyi, percakapan dalam hati, dan momen-momen kecil yang terasa besar.</p>
-            <p>Menulis  adalah cara untuk berdiam sejenak, merasakan sesuatu dengan lebih penuh, dan menemukan bahasa bagi hal-hal yang selama ini tak terucapkan.</p>
+          
+          <h1 class="name" id="profile-name">
+            <span class="word"><span class="char">C</span><span class="char">h</span><span class="char">a</span><span class="char">o</span></span>
+            <span class="word"><span class="char">I</span><span class="char">v</span><span class="char">a</span><span class="char">n</span><span class="char">s</span></span>
+          </h1>
+          
+          <div class="rule" data-reveal="expand">
+            <span class="r-line r-left"></span>
+            <span class="r-mid">〜</span>
+            <span class="r-line r-right"></span>
           </div>
-
-          <div class="stats">
-            <div class="stat"><span class="sn" id="cnt">{total}</span><span class="sl">Karya</span></div>
-            <div class="sdiv">·</div>
-            <div class="stat"><span class="sn">2019</span><span class="sl">Dimulai</span></div>
-            <div class="sdiv">·</div>
-            <div class="stat"><span class="sn">ID</span><span class="sl">Bahasa</span></div>
-          </div>
-
-          <a href="/semua" class="cta">Baca semua karya →</a>
         </div>
+
+        <!-- Quote -->
+        <blockquote class="quote" id="quote-block">
+          <div class="quote-border" aria-hidden="true"></div>
+          <p class="q-line" data-reveal="line">Membaca untuk mengenal dunia</p>
+          <p class="q-line q2" data-reveal="line">Dan menulis untuk dikenal dunia.</p>
+        </blockquote>
+
+        <!-- Bio -->
+        <div class="bio" id="bio-block">
+          <p data-reveal="up">Ini adalah ruang pribadi untuk menulis apapun yang ada di dalam pikiranku. Setiap baris lahir dari pengamatan hujan di luar jendela, keramaian kota yang sunyi, percakapan dalam hati, dan momen-momen kecil yang terasa besar.</p>
+          <p data-reveal="up">Menulis adalah cara untuk berdiam sejenak, merasakan sesuatu dengan lebih penuh, dan menemukan bahasa bagi hal-hal yang selama ini tak terucapkan.</p>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats" id="stats-block" data-reveal="up">
+          <div class="stat" data-reveal="stat">
+            <span class="sn" data-count={total}>{total}</span>
+            <span class="sl">Karya</span>
+          </div>
+          <div class="sdiv" data-reveal="stat">·</div>
+          <div class="stat" data-reveal="stat">
+            <span class="sn" data-count="2019">2019</span>
+            <span class="sl">Dimulai</span>
+          </div>
+          <div class="sdiv" data-reveal="stat">·</div>
+          <div class="stat" data-reveal="stat">
+            <span class="sn">ID</span>
+            <span class="sl">Bahasa</span>
+          </div>
+        </div>
+
+        <a href="/semua" class="cta" data-reveal="up">Baca semua karya →</a>
+
       </div>
     </main>
     <Footer />
   </div>
 </Layout>
 
-<style>
-  .page{display:flex;flex-direction:column;min-height:100vh} main{flex:1}
-  .container{max-width:640px;margin:0 auto;padding:4rem 1.5rem 6rem}
-  .wrap{opacity:0;animation:fadeUp .7s .1s ease forwards}
+<!-- ════════════════════════════════════════════════════════
+     ANIMATION ENGINE
+     ════════════════════════════════════════════════════════ -->
+<script is:inline>
+(function() {
+  'use strict';
+  
+  const $ = (q) => document.querySelector(q);
+  const $$ = (q) => document.querySelectorAll(q);
+  
+  function forceReflow(el) {
+    void el.offsetHeight;
+  }
 
-  /* FOTO */
+  /* ── 1. FOTO REVEAL ─────────────────────────────── */
+  function initFotoReveal() {
+    const foto = $('#profile-foto');
+    const glow = $('#foto-glow');
+    
+    if (foto) {
+      foto.style.cssText = 'opacity:0; filter:blur(15px) grayscale(100%); transform:scale(0.85); transition:none;';
+      forceReflow(foto);
+      setTimeout(() => {
+        foto.style.transition = 'opacity 1.2s cubic-bezier(0.22,1,0.36,1), filter 1.5s cubic-bezier(0.22,1,0.36,1), transform 1.2s cubic-bezier(0.22,1,0.36,1)';
+        foto.style.opacity = '1';
+        foto.style.filter = 'blur(0px) grayscale(20%)';
+        foto.style.transform = 'scale(1)';
+      }, 100);
+    }
+    
+    if (glow) {
+      glow.style.cssText = 'opacity:0; transform:scale(0.5); transition:none;';
+      forceReflow(glow);
+      setTimeout(() => {
+        glow.style.transition = 'opacity 1.5s cubic-bezier(0.22,1,0.36,1), transform 1.5s cubic-bezier(0.22,1,0.36,1)';
+        glow.style.opacity = '0.35';
+        glow.style.transform = 'scale(1)';
+        // Setelah muncul, baru jalankan breathe
+        setTimeout(() => {
+          glow.style.animation = 'breathe 7s ease-in-out infinite';
+        }, 1500);
+      }, 200);
+    }
+  }
+
+  /* ── 2. NAME BLUR STAGGER ───────────────────────── */
+  function initNameReveal() {
+    const chars = $$('#profile-name .char');
+    if (chars.length === 0) return;
+    
+    chars.forEach((c) => {
+      c.style.cssText = 'display:inline-block; opacity:0; filter:blur(12px); transform:translateY(20px); transition:none;';
+      forceReflow(c);
+    });
+    
+    requestAnimationFrame(() => {
+      chars.forEach((c, i) => {
+        c.style.transition = 'opacity 0.7s cubic-bezier(0.22,1,0.36,1), filter 0.9s cubic-bezier(0.22,1,0.36,1), transform 0.7s cubic-bezier(0.22,1,0.36,1)';
+        setTimeout(() => {
+          c.style.opacity = '1';
+          c.style.filter = 'blur(0px)';
+          c.style.transform = 'translateY(0)';
+        }, 400 + (i * 70));
+      });
+    });
+  }
+
+  /* ── 3. RULE EXPAND ─────────────────────────────── */
+  function initRuleReveal() {
+    const rule = $('.rule');
+    if (!rule) return;
+    
+    const left = rule.querySelector('.r-left');
+    const right = rule.querySelector('.r-right');
+    const mid = rule.querySelector('.r-mid');
+    
+    if (left) left.style.cssText = 'transform:scaleX(0); transform-origin:right; transition:none;';
+    if (right) right.style.cssText = 'transform:scaleX(0); transform-origin:left; transition:none;';
+    if (mid) mid.style.cssText = 'opacity:0; transform:scale(0.5); transition:none;';
+    
+    [left, right, mid].forEach(el => { if (el) forceReflow(el); });
+    
+    setTimeout(() => {
+      if (left) {
+        left.style.transition = 'transform 0.9s cubic-bezier(0.22,1,0.36,1)';
+        left.style.transform = 'scaleX(1)';
+      }
+      if (right) {
+        right.style.transition = 'transform 0.9s cubic-bezier(0.22,1,0.36,1)';
+        right.style.transform = 'scaleX(1)';
+      }
+      if (mid) {
+        mid.style.transition = 'opacity 0.6s 0.4s ease, transform 0.6s 0.4s cubic-bezier(0.22,1,0.36,1)';
+        mid.style.opacity = '1';
+        mid.style.transform = 'scale(1)';
+      }
+    }, 800);
+  }
+
+  /* ── 4. QUOTE REVEAL ────────────────────────────── */
+  function initQuoteReveal() {
+    const block = $('#quote-block');
+    if (!block) return;
+    
+    const border = block.querySelector('.quote-border');
+    const lines = block.querySelectorAll('.q-line');
+    
+    // Border draw dari atas ke bawah
+    if (border) {
+      border.style.cssText = 'position:absolute; left:0; top:0; width:3px; height:0; background:var(--teal); transition:none;';
+      forceReflow(border);
+      setTimeout(() => {
+        border.style.transition = 'height 1s cubic-bezier(0.4,0,0.2,1)';
+        border.style.height = '100%';
+      }, 600);
+    }
+    
+    // Lines fade up berjeda
+    lines.forEach((line, i) => {
+      line.style.cssText = 'opacity:0; transform:translateY(20px); filter:blur(6px); transition:none;';
+      forceReflow(line);
+      setTimeout(() => {
+        line.style.transition = 'opacity 0.9s cubic-bezier(0.22,1,0.36,1), transform 0.9s cubic-bezier(0.22,1,0.36,1), filter 1s cubic-bezier(0.22,1,0.36,1)';
+        setTimeout(() => {
+          line.style.opacity = '1';
+          line.style.transform = 'translateY(0)';
+          line.style.filter = 'blur(0px)';
+        }, i * 250);
+      }, 900);
+    });
+  }
+
+  /* ── 5. BIO REVEAL ──────────────────────────────── */
+  function initBioReveal() {
+    const paras = $$('#bio-block p');
+    if (paras.length === 0) return;
+    
+    paras.forEach((p) => {
+      p.style.cssText = 'opacity:0; transform:translateY(30px); transition:none;';
+      forceReflow(p);
+    });
+    
+    requestAnimationFrame(() => {
+      paras.forEach((p) => {
+        p.style.transition = 'opacity 0.8s cubic-bezier(0.22,1,0.36,1), transform 0.8s cubic-bezier(0.22,1,0.36,1)';
+      });
+    });
+    
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const el = entry.target;
+          const idx = Array.from(paras).indexOf(el);
+          setTimeout(() => {
+            el.style.opacity = '1';
+            el.style.transform = 'translateY(0)';
+          }, idx * 200);
+          observer.unobserve(el);
+        }
+      });
+    }, { threshold: 0.2, rootMargin: '0px 0px -40px 0px' });
+    
+    paras.forEach((p) => observer.observe(p));
+  }
+
+  /* ── 6. STATS REVEAL + COUNT UP ─────────────────── */
+  function initStatsReveal() {
+    const stats = $('#stats-block');
+    if (!stats) return;
+    
+    const items = stats.querySelectorAll('.stat, .sdiv');
+    
+    // Set initial
+    items.forEach((item) => {
+      item.style.cssText = 'opacity:0; transform:translateY(20px) scale(0.95); transition:none;';
+      forceReflow(item);
+    });
+    
+    requestAnimationFrame(() => {
+      items.forEach((item) => {
+        item.style.transition = 'opacity 0.7s cubic-bezier(0.22,1,0.36,1), transform 0.7s cubic-bezier(0.22,1,0.36,1)';
+      });
+    });
+    
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const block = entry.target;
+          const items = block.querySelectorAll('.stat, .sdiv');
+          
+          items.forEach((item, i) => {
+            setTimeout(() => {
+              item.style.opacity = '1';
+              item.style.transform = 'translateY(0) scale(1)';
+              
+              // Count up untuk angka
+              const numEl = item.querySelector('.sn[data-count]');
+              if (numEl) {
+                const target = parseInt(numEl.dataset.count);
+                const duration = 1200;
+                const start = performance.now();
+                const startVal = 0;
+                
+                function updateNum(now) {
+                  const elapsed = now - start;
+                  const progress = Math.min(elapsed / duration, 1);
+                  // Ease out cubic
+                  const ease = 1 - Math.pow(1 - progress, 3);
+                  const current = Math.round(startVal + (target - startVal) * ease);
+                  numEl.textContent = current;
+                  if (progress < 1) requestAnimationFrame(updateNum);
+                }
+                requestAnimationFrame(updateNum);
+              }
+            }, i * 120);
+          });
+          
+          observer.unobserve(block);
+        }
+      });
+    }, { threshold: 0.3 });
+    
+    observer.observe(stats);
+  }
+
+  /* ── 7. CTA REVEAL ──────────────────────────────── */
+  function initCtaReveal() {
+    const cta = $('.cta');
+    if (!cta) return;
+    
+    cta.style.cssText = 'opacity:0; transform:translateY(20px); transition:none;';
+    forceReflow(cta);
+    
+    requestAnimationFrame(() => {
+      cta.style.transition = 'opacity 0.8s cubic-bezier(0.22,1,0.36,1), transform 0.8s cubic-bezier(0.22,1,0.36,1), color 0.2s';
+    });
+    
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.5 });
+    
+    observer.observe(cta);
+  }
+
+  /* ── 8. PARALLAX FOTO ───────────────────────────── */
+  function initParallax() {
+    const hero = $('#hero-section');
+    if (!hero) return;
+    
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          const y = window.scrollY;
+          const fotoWrap = hero.querySelector('.foto-wrap');
+          if (fotoWrap) fotoWrap.style.transform = `translateY(${y * 0.08}px)`;
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }, { passive: true });
+  }
+
+  /* ── INIT ALL ───────────────────────────────────── */
+  function init() {
+    initFotoReveal();
+    initNameReveal();
+    initRuleReveal();
+    initQuoteReveal();
+    initBioReveal();
+    initStatsReveal();
+    initCtaReveal();
+    initParallax();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+
+<style>
+  /* ════════════════════════════════════════════════════════
+     BASE
+     ════════════════════════════════════════════════════════ */
+  .page { display:flex; flex-direction:column; min-height:100vh; }
+  main { flex:1; }
+
+  /* Grain overlay — konsisten dengan beranda & puisi */
+  .page::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 180px 180px;
+    opacity: 0.035;
+    pointer-events: none;
+    z-index: 999;
+    animation: grainShift 0.5s steps(2) infinite;
+  }
+  @keyframes grainShift {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(-1px, 1px); }
+  }
+
+  .container {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 4rem 1.5rem 6rem;
+  }
+
+  /* ════════════════════════════════════════════════════════
+     HERO SECTION — Foto & Nama
+     ════════════════════════════════════════════════════════ */
+  .hero-section {
+    margin-bottom: 2.5rem;
+    position: relative;
+  }
+
   .foto-wrap {
     position: relative;
     width: 110px;
     height: 110px;
     margin-bottom: 2rem;
+    will-change: transform;
   }
+
   .foto {
     width: 110px;
     height: 110px;
@@ -71,9 +417,11 @@ const total = (await getAllPuisi()).length;
     display: block;
     position: relative;
     z-index: 1;
-    transition: filter .3s;
+    transition: filter 0.3s;
+    will-change: transform, filter, opacity;
   }
   .foto:hover { filter: grayscale(0%); }
+
   .foto-glow {
     position: absolute;
     inset: -15px;
@@ -81,38 +429,165 @@ const total = (await getAllPuisi()).length;
     filter: blur(40px);
     border-radius: 50%;
     z-index: 0;
-    
-    /* Ubah opacity awal menjadi sedikit lebih rendah */
-    opacity: 0.3; 
-    /* Tambahkan animasi 'breathe' yang berulang tanpa henti */
-    animation: breathe 7s ease-in-out infinite;
+    opacity: 0;
+    will-change: transform, opacity;
   }
 
-  /* Tambahkan keyframes ini di bawah kelas .foto-glow */
   @keyframes breathe {
     0%, 100% { opacity: 0.3; transform: scale(0.95); }
     50%      { opacity: 0.5; transform: scale(1.05); }
   }
 
-  .hero{margin-bottom:2.5rem}
-  .name{font-family:var(--display);font-size:clamp(2.8rem,10vw,5rem);font-weight:400;line-height:1.1;letter-spacing:-.02em;color:var(--fog);margin-bottom:1.5rem}
-  .rule{display:flex;align-items:center;gap:.75rem}
-  .rule span:first-child,.rule span:last-child{flex:1;height:1px;background:var(--ink-line)}
-  .m{color:var(--teal);opacity:.4;font-size:1rem}
+  /* Name — Split text ready */
+  .name {
+    font-family: var(--display);
+    font-size: clamp(2.8rem, 10vw, 5rem);
+    font-weight: 400;
+    line-height: 1.1;
+    letter-spacing: -.02em;
+    color: var(--fog);
+    margin-bottom: 1.5rem;
+  }
+  .name .word {
+    display: inline-block;
+    margin-right: 0.2em;
+    white-space: nowrap;
+  }
+  .name .char {
+    display: inline-block;
+    will-change: transform, filter, opacity;
+  }
 
-  .quote{margin:2.5rem 0;padding:2rem 1.75rem;border-left:3px solid var(--teal);background:linear-gradient(to right,var(--teal-faint),transparent 80%);border-radius:0 4px 4px 0}
-  .quote p{font-family:var(--display);font-style:italic;font-size:clamp(1.1rem,3.5vw,1.4rem);font-weight:400;line-height:1.8;color:var(--fog-dim)}
-  .q2{color:var(--fog)}
+  /* Rule expand */
+  .rule {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+  }
+  .r-line {
+    flex: 1;
+    height: 1px;
+    background: var(--ink-line);
+  }
+  .r-mid {
+    color: var(--teal);
+    opacity: .4;
+    font-size: 1rem;
+  }
 
-  .bio{margin:2.5rem 0;display:flex;flex-direction:column;gap:1.1rem}
-  .bio p{font-family:var(--serif);font-size:1rem;line-height:1.9;color:var(--fog-dim)}
+  /* ════════════════════════════════════════════════════════
+     QUOTE — Border draw + line reveal
+     ════════════════════════════════════════════════════════ */
+  .quote {
+    position: relative;
+    margin: 2.5rem 0;
+    padding: 2rem 1.75rem;
+    background: linear-gradient(to right, var(--teal-faint), transparent 80%);
+    border-radius: 0 4px 4px 0;
+    overflow: hidden;
+  }
+  
+  .quote-border {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 3px;
+    height: 0;
+    background: var(--teal);
+  }
+  
+  .q-line {
+    font-family: var(--display);
+    font-style: italic;
+    font-size: clamp(1.1rem, 3.5vw, 1.4rem);
+    font-weight: 400;
+    line-height: 1.8;
+    color: var(--fog-dim);
+    will-change: transform, filter, opacity;
+  }
+  .q2 { color: var(--fog); }
 
-  .stats{display:flex;align-items:center;gap:1.5rem;margin:2.5rem 0;padding:1.5rem;background:var(--ink-card);border:1px solid var(--ink-line);border-radius:4px;flex-wrap:wrap}
-  .stat{display:flex;flex-direction:column;align-items:center;gap:.2rem}
-  .sn{font-family:var(--display);font-size:1.8rem;color:var(--teal);line-height:1}
-  .sl{font-family:var(--mono);font-size:.58rem;text-transform:uppercase;letter-spacing:.12em;color:var(--fog-ghost)}
-  .sdiv{color:var(--ink-line);font-size:1.5rem;flex:1;text-align:center}
+  /* ════════════════════════════════════════════════════════
+     BIO
+     ════════════════════════════════════════════════════════ */
+  .bio {
+    margin: 2.5rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+  }
+  .bio p {
+    font-family: var(--serif);
+    font-size: 1rem;
+    line-height: 1.9;
+    color: var(--fog-dim);
+    will-change: transform, opacity;
+  }
 
-  .cta{font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.14em;color:var(--teal-soft);transition:color .2s;display:inline-block;margin-top:.5rem}
-  .cta:hover{color:var(--teal)}
+  /* ════════════════════════════════════════════════════════
+     STATS — Counter + reveal
+     ════════════════════════════════════════════════════════ */
+  .stats {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin: 2.5rem 0;
+    padding: 1.5rem;
+    background: var(--ink-card);
+    border: 1px solid var(--ink-line);
+    border-radius: 4px;
+    flex-wrap: wrap;
+    will-change: transform, opacity;
+  }
+  .stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .2rem;
+    will-change: transform, opacity;
+  }
+  .sn {
+    font-family: var(--display);
+    font-size: 1.8rem;
+    color: var(--teal);
+    line-height: 1;
+  }
+  .sl {
+    font-family: var(--mono);
+    font-size: .58rem;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    color: var(--fog-ghost);
+  }
+  .sdiv {
+    color: var(--ink-line);
+    font-size: 1.5rem;
+    flex: 1;
+    text-align: center;
+    will-change: transform, opacity;
+  }
+
+  /* ════════════════════════════════════════════════════════
+     CTA
+     ════════════════════════════════════════════════════════ */
+  .cta {
+    font-family: var(--mono);
+    font-size: .68rem;
+    text-transform: uppercase;
+    letter-spacing: .14em;
+    color: var(--teal-soft);
+    transition: color 0.2s;
+    display: inline-block;
+    margin-top: 0.5rem;
+    will-change: transform, opacity;
+  }
+  .cta:hover { color: var(--teal); }
+
+  /* ════════════════════════════════════════════════════════
+     KEYFRAMES
+     ════════════════════════════════════════════════════════ */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
 </style>
