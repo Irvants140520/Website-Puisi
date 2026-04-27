@@ -4,590 +4,358 @@ import Header  from '../components/Header.astro';
 import Footer  from '../components/Footer.astro';
 import { getAllPuisi } from '../lib/supabase.js';
 
-const total = (await getAllPuisi()).length;
+const semua = await getAllPuisi();
+const total = semua.length;
+const startedYear = 2019;
+const currentYear = new Date().getFullYear();
+const yearsWriting = currentYear - startedYear;
 ---
 
-<Layout title="Tentang — Chao Ivans">
-  <div class="page">
-    <Header currentPath="/tentang" />
-    <main>
-      <div class="container">
+<Layout title="Tentang — Chao Ivans" description="Tentang Chao Ivans, penulis Ruang Ivans.">
+  <Header currentPath="/tentang" />
 
-        <!-- Foto & Nama -->
-        <div class="hero-section" id="hero-section">
-          <div class="foto-wrap" data-reveal="glow">
-            <img src="/chaoivans.jpg" alt="Chao Ivans" class="foto" id="profile-foto" />
-            <div class="foto-glow" id="foto-glow"></div>
-          </div>
-          
-          <h1 class="name" id="profile-name">
-            <span class="word"><span class="char">C</span><span class="char">h</span><span class="char">a</span><span class="char">o</span></span>
-            <span class="word"><span class="char">I</span><span class="char">v</span><span class="char">a</span><span class="char">n</span><span class="char">s</span></span>
-          </h1>
-          
-          <div class="rule" data-reveal="expand">
-            <span class="r-line r-left"></span>
-            <span class="r-mid">〜</span>
-            <span class="r-line r-right"></span>
-          </div>
-        </div>
+  <main class="page">
 
-        <!-- Quote -->
-        <blockquote class="quote" id="quote-block">
-          <div class="quote-border" aria-hidden="true"></div>
-          <p class="q-line" data-reveal="line">Membaca untuk mengenal dunia</p>
-          <p class="q-line q2" data-reveal="line">Dan menulis untuk dikenal dunia.</p>
-        </blockquote>
+    <!-- ── Intro ── -->
+    <section class="intro">
+      <p class="kicker" data-anim="kicker">— tentang penulis</p>
+      <h1 class="title" data-anim="title">Chao Ivans</h1>
+      <!-- <p class="role" data-anim="role">— penulis · sejak {startedYear}</p> -->
 
-        <!-- Bio -->
-        <div class="bio" id="bio-block">
-          <p data-reveal="up">Ini adalah ruang pribadi untuk menulis apapun yang ada di dalam pikiranku. Setiap baris lahir dari pengamatan hujan di luar jendela, keramaian kota yang sunyi, percakapan dalam hati, dan momen-momen kecil yang terasa besar.</p>
-          <p data-reveal="up">Menulis adalah cara untuk berdiam sejenak, merasakan sesuatu dengan lebih penuh, dan menemukan bahasa bagi hal-hal yang selama ini tak terucapkan.</p>
-        </div>
-
-        <!-- Stats -->
-        <div class="stats" id="stats-block" data-reveal="up">
-          <div class="stat" data-reveal="stat">
-            <span class="sn" data-count={total}>{total}</span>
-            <span class="sl">Karya</span>
-          </div>
-          <div class="sdiv" data-reveal="stat">·</div>
-          <div class="stat" data-reveal="stat">
-            <span class="sn" data-count="2019">2019</span>
-            <span class="sl">Dimulai</span>
-          </div>
-          <div class="sdiv" data-reveal="stat">·</div>
-          <div class="stat" data-reveal="stat">
-            <span class="sn">ID</span>
-            <span class="sl">Bahasa</span>
-          </div>
-        </div>
-
-        <a href="/semua" class="cta" data-reveal="up">Baca semua karya →</a>
-
+      <div class="portrait" data-anim="portrait">
+        <img
+          src="/chaoivans.jpg"
+          alt="Chao Ivans"
+          width="580"
+          height="580"
+          loading="lazy"
+          decoding="async"
+        />
       </div>
-    </main>
-    <Footer />
-  </div>
+    </section>
+
+    <!-- ── Body letter ── -->
+    <section class="body">
+      <p data-anim="paragraph">
+        Namaku <em>Chao Ivans</em>,
+        <br/> seorang yang menulis bukan karena ia benar & paham akan sesuatu,
+        <br/> melainkan karena ingin mengerti dan ingin melihat kebodohannya sendiri. 
+        <br/> Setiap baris yang tersusun, lahir
+        dari ingatan yang nyaris luput: rintik hujan yang membasahi jendela, perbincangan antara bulan & bintang di langit temaram, dan percakapan yang tak sempat selesai, namun membekas.
+      </p>
+      <p data-anim="paragraph">
+        Ruang ini adalah milik pribadi, tempat menyimpan apa yang berseliweran
+        di dalam pikiran yang ribut. Tak semua perlu dimaknai. Beberapa ditulis hanya
+        untuk berdiam sejenak, untuk merasakan sesuatu dengan lebih penuh, dan
+        untuk menemukan bahasa bagi hal-hal yang selama ini tak terucapkan.
+      </p>
+      <p data-anim="paragraph">
+        Aku percaya bahwa kata yang sederhana, jika ditata dengan jujur, dapat
+        menyalakan lilin kecil yang hangat, di dalam ruang gelap seseorang. Itulah yang aku
+        coba lakukan.
+      </p>
+      <p data-anim="paragraph">
+        Terima kasih telah meluangkan
+        waktu untuk singgah di lembaran-lembaran ini.
+      </p>
+    </section>
+
+    <!-- ── Quote ── -->
+    <section class="quote-sec">
+      <blockquote class="quote">
+        <p data-anim="quote">
+          Membaca untuk mengenal dunia,<br/>
+          <em>menulis untuk dikenal dunia.</em>
+        </p>
+      </blockquote>
+    </section>
+
+    <!-- ── Stats ── -->
+    <section class="stats-sec">
+      <div class="stats" data-anim="stats">
+        <div><strong data-count={total}>{total}</strong><span>karya</span></div>
+        <div><strong>{yearsWriting}</strong><span>tahun</span></div>
+        <div><strong>id</strong><span>bahasa</span></div>
+      </div>
+    </section>
+
+    <!-- ── Closing ── -->
+    <section class="closing">
+      <p data-anim="signature">salam hangat dari ruang sunyi,</p>
+      <p class="sign" data-anim="signature">— Chao Ivans</p>
+      <a href="/semua" class="cta" data-anim="cta">
+        <span>baca seluruh karya</span>
+        <svg viewBox="0 0 28 8" width="28" height="8"><path d="M0 4 H 24 M 21 1 L 24 4 L 21 7" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+    </section>
+
+  </main>
+
+  <Footer />
 </Layout>
 
-<!-- ════════════════════════════════════════════════════════
-     ANIMATION ENGINE
-     ════════════════════════════════════════════════════════ -->
 <script is:inline>
-(function() {
-  'use strict';
-  
-  const $ = (q) => document.querySelector(q);
-  const $$ = (q) => document.querySelectorAll(q);
-  
-  function forceReflow(el) {
-    void el.offsetHeight;
-  }
+  (() => {
+    const init = () => {
+      if (!window.gsap) return;
+      const gsap = window.gsap;
+      if (window.ScrollTrigger) gsap.registerPlugin(window.ScrollTrigger);
 
-  /* ── 1. FOTO REVEAL ─────────────────────────────── */
-  function initFotoReveal() {
-    const foto = $('#profile-foto');
-    const glow = $('#foto-glow');
-    
-    if (foto) {
-      foto.style.cssText = 'opacity:0; filter:blur(15px) grayscale(100%); transform:scale(0.85); transition:none;';
-      forceReflow(foto);
-      setTimeout(() => {
-        foto.style.transition = 'opacity 1.2s cubic-bezier(0.22,1,0.36,1), filter 1.5s cubic-bezier(0.22,1,0.36,1), transform 1.2s cubic-bezier(0.22,1,0.36,1)';
-        foto.style.opacity = '1';
-        foto.style.filter = 'blur(0px) grayscale(20%)';
-        foto.style.transform = 'scale(1)';
-      }, 100);
-    }
-    
-    if (glow) {
-      glow.style.cssText = 'opacity:0; transform:scale(0.5); transition:none;';
-      forceReflow(glow);
-      setTimeout(() => {
-        glow.style.transition = 'opacity 1.5s cubic-bezier(0.22,1,0.36,1), transform 1.5s cubic-bezier(0.22,1,0.36,1)';
-        glow.style.opacity = '0.35';
-        glow.style.transform = 'scale(1)';
-        // Setelah muncul, baru jalankan breathe
-        setTimeout(() => {
-          glow.style.animation = 'breathe 7s ease-in-out infinite';
-        }, 1500);
-      }, 200);
-    }
-  }
+      const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+      tl.from('[data-anim="kicker"]',   { opacity: 0, y: 10, duration: 0.7 })
+        .from('[data-anim="title"]',    { opacity: 0, y: 24, filter: 'blur(6px)', duration: 1.0 }, 0.1)
+        .from('[data-anim="role"]',     { opacity: 0, y: 12, duration: 0.7 }, 0.4)
+        .from('[data-anim="portrait"]', { opacity: 0, scale: 0.94, filter: 'blur(8px)', duration: 1.2 }, 0.5);
 
-  /* ── 2. NAME BLUR STAGGER ───────────────────────── */
-  function initNameReveal() {
-    const chars = $$('#profile-name .char');
-    if (chars.length === 0) return;
-    
-    chars.forEach((c) => {
-      c.style.cssText = 'display:inline-block; opacity:0; filter:blur(12px); transform:translateY(20px); transition:none;';
-      forceReflow(c);
-    });
-    
-    requestAnimationFrame(() => {
-      chars.forEach((c, i) => {
-        c.style.transition = 'opacity 0.7s cubic-bezier(0.22,1,0.36,1), filter 0.9s cubic-bezier(0.22,1,0.36,1), transform 0.7s cubic-bezier(0.22,1,0.36,1)';
-        setTimeout(() => {
-          c.style.opacity = '1';
-          c.style.filter = 'blur(0px)';
-          c.style.transform = 'translateY(0)';
-        }, 400 + (i * 70));
-      });
-    });
-  }
+      if (!window.ScrollTrigger) return;
 
-  /* ── 3. RULE EXPAND ─────────────────────────────── */
-  function initRuleReveal() {
-    const rule = $('.rule');
-    if (!rule) return;
-    
-    const left = rule.querySelector('.r-left');
-    const right = rule.querySelector('.r-right');
-    const mid = rule.querySelector('.r-mid');
-    
-    if (left) left.style.cssText = 'transform:scaleX(0); transform-origin:right; transition:none;';
-    if (right) right.style.cssText = 'transform:scaleX(0); transform-origin:left; transition:none;';
-    if (mid) mid.style.cssText = 'opacity:0; transform:scale(0.5); transition:none;';
-    
-    [left, right, mid].forEach(el => { if (el) forceReflow(el); });
-    
-    setTimeout(() => {
-      if (left) {
-        left.style.transition = 'transform 0.9s cubic-bezier(0.22,1,0.36,1)';
-        left.style.transform = 'scaleX(1)';
-      }
-      if (right) {
-        right.style.transition = 'transform 0.9s cubic-bezier(0.22,1,0.36,1)';
-        right.style.transform = 'scaleX(1)';
-      }
-      if (mid) {
-        mid.style.transition = 'opacity 0.6s 0.4s ease, transform 0.6s 0.4s cubic-bezier(0.22,1,0.36,1)';
-        mid.style.opacity = '1';
-        mid.style.transform = 'scale(1)';
-      }
-    }, 800);
-  }
-
-  /* ── 4. QUOTE REVEAL ────────────────────────────── */
-  function initQuoteReveal() {
-    const block = $('#quote-block');
-    if (!block) return;
-    
-    const border = block.querySelector('.quote-border');
-    const lines = block.querySelectorAll('.q-line');
-    
-    // Border draw dari atas ke bawah
-    if (border) {
-      border.style.cssText = 'position:absolute; left:0; top:0; width:3px; height:0; background:var(--teal); transition:none;';
-      forceReflow(border);
-      setTimeout(() => {
-        border.style.transition = 'height 1s cubic-bezier(0.4,0,0.2,1)';
-        border.style.height = '100%';
-      }, 600);
-    }
-    
-    // Lines fade up berjeda
-    lines.forEach((line, i) => {
-      line.style.cssText = 'opacity:0; transform:translateY(20px); filter:blur(6px); transition:none;';
-      forceReflow(line);
-      setTimeout(() => {
-        line.style.transition = 'opacity 0.9s cubic-bezier(0.22,1,0.36,1), transform 0.9s cubic-bezier(0.22,1,0.36,1), filter 1s cubic-bezier(0.22,1,0.36,1)';
-        setTimeout(() => {
-          line.style.opacity = '1';
-          line.style.transform = 'translateY(0)';
-          line.style.filter = 'blur(0px)';
-        }, i * 250);
-      }, 900);
-    });
-  }
-
-  /* ── 5. BIO REVEAL ──────────────────────────────── */
-  function initBioReveal() {
-    const paras = $$('#bio-block p');
-    if (paras.length === 0) return;
-    
-    paras.forEach((p) => {
-      p.style.cssText = 'opacity:0; transform:translateY(30px); transition:none;';
-      forceReflow(p);
-    });
-    
-    requestAnimationFrame(() => {
-      paras.forEach((p) => {
-        p.style.transition = 'opacity 0.8s cubic-bezier(0.22,1,0.36,1), transform 0.8s cubic-bezier(0.22,1,0.36,1)';
-      });
-    });
-    
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          const el = entry.target;
-          const idx = Array.from(paras).indexOf(el);
-          setTimeout(() => {
-            el.style.opacity = '1';
-            el.style.transform = 'translateY(0)';
-          }, idx * 200);
-          observer.unobserve(el);
-        }
-      });
-    }, { threshold: 0.2, rootMargin: '0px 0px -40px 0px' });
-    
-    paras.forEach((p) => observer.observe(p));
-  }
-
-  /* ── 6. STATS REVEAL + COUNT UP ─────────────────── */
-  function initStatsReveal() {
-    const stats = $('#stats-block');
-    if (!stats) return;
-    
-    const items = stats.querySelectorAll('.stat, .sdiv');
-    
-    // Set initial
-    items.forEach((item) => {
-      item.style.cssText = 'opacity:0; transform:translateY(20px) scale(0.95); transition:none;';
-      forceReflow(item);
-    });
-    
-    requestAnimationFrame(() => {
-      items.forEach((item) => {
-        item.style.transition = 'opacity 0.7s cubic-bezier(0.22,1,0.36,1), transform 0.7s cubic-bezier(0.22,1,0.36,1)';
-      });
-    });
-    
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          const block = entry.target;
-          const items = block.querySelectorAll('.stat, .sdiv');
-          
-          items.forEach((item, i) => {
-            setTimeout(() => {
-              item.style.opacity = '1';
-              item.style.transform = 'translateY(0) scale(1)';
-              
-              // Count up untuk angka
-              const numEl = item.querySelector('.sn[data-count]');
-              if (numEl) {
-                const target = parseInt(numEl.dataset.count);
-                const duration = 1200;
-                const start = performance.now();
-                const startVal = 0;
-                
-                function updateNum(now) {
-                  const elapsed = now - start;
-                  const progress = Math.min(elapsed / duration, 1);
-                  // Ease out cubic
-                  const ease = 1 - Math.pow(1 - progress, 3);
-                  const current = Math.round(startVal + (target - startVal) * ease);
-                  numEl.textContent = current;
-                  if (progress < 1) requestAnimationFrame(updateNum);
-                }
-                requestAnimationFrame(updateNum);
-              }
-            }, i * 120);
+      // body paragraphs — word reveal on scroll (kept from before)
+      gsap.utils.toArray('.body p').forEach((p) => {
+        if (window.SplitType) {
+          const split = new window.SplitType(p, { types: 'words' });
+          gsap.set(split.words, { opacity: 0.18 });
+          gsap.to(split.words, {
+            opacity: 1, stagger: 0.025, duration: 0.6, ease: 'power2.out',
+            scrollTrigger: { trigger: p, start: 'top 80%', end: 'top 35%', scrub: 1 }
           });
-          
-          observer.unobserve(block);
+        } else {
+          gsap.from(p, { opacity: 0, y: 20, duration: 0.9, scrollTrigger: { trigger: p, start: 'top 85%' } });
         }
       });
-    }, { threshold: 0.3 });
-    
-    observer.observe(stats);
-  }
 
-  /* ── 7. CTA REVEAL ──────────────────────────────── */
-  function initCtaReveal() {
-    const cta = $('.cta');
-    if (!cta) return;
-    
-    cta.style.cssText = 'opacity:0; transform:translateY(20px); transition:none;';
-    forceReflow(cta);
-    
-    requestAnimationFrame(() => {
-      cta.style.transition = 'opacity 0.8s cubic-bezier(0.22,1,0.36,1), transform 0.8s cubic-bezier(0.22,1,0.36,1), color 0.2s';
-    });
-    
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.style.opacity = '1';
-          entry.target.style.transform = 'translateY(0)';
-          observer.unobserve(entry.target);
-        }
+      gsap.from('[data-anim="quote"]', {
+        opacity: 0, y: 24, filter: 'blur(6px)', duration: 1.1, ease: 'power3.out',
+        scrollTrigger: { trigger: '.quote-sec', start: 'top 75%' }
       });
-    }, { threshold: 0.5 });
-    
-    observer.observe(cta);
-  }
 
-  /* ── 8. PARALLAX FOTO ───────────────────────────── */
-  function initParallax() {
-    const hero = $('#hero-section');
-    if (!hero) return;
-    
-    let ticking = false;
-    window.addEventListener('scroll', () => {
-      if (!ticking) {
-        requestAnimationFrame(() => {
-          const y = window.scrollY;
-          const fotoWrap = hero.querySelector('.foto-wrap');
-          if (fotoWrap) fotoWrap.style.transform = `translateY(${y * 0.08}px)`;
-          ticking = false;
+      gsap.from('[data-anim="stats"] > *', {
+        opacity: 0, y: 14, stagger: 0.08, duration: 0.7, ease: 'power3.out',
+        scrollTrigger: { trigger: '.stats-sec', start: 'top 82%' }
+      });
+
+      document.querySelectorAll('[data-count]').forEach((el) => {
+        const target = parseInt(el.dataset.count, 10);
+        if (!Number.isFinite(target)) return;
+        gsap.fromTo(el, { textContent: 0 }, {
+          textContent: target,
+          duration: 1.4, ease: 'power2.out',
+          snap: { textContent: 1 },
+          scrollTrigger: { trigger: '.stats-sec', start: 'top 80%' },
+          onUpdate: function () { el.textContent = Math.round(this.targets()[0].textContent || 0); }
         });
-        ticking = true;
-      }
-    }, { passive: true });
-  }
+      });
 
-  /* ── INIT ALL ───────────────────────────────────── */
-  function init() {
-    initFotoReveal();
-    initNameReveal();
-    initRuleReveal();
-    initQuoteReveal();
-    initBioReveal();
-    initStatsReveal();
-    initCtaReveal();
-    initParallax();
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
-})();
+      gsap.from('[data-anim="signature"]', {
+        opacity: 0, y: 14, stagger: 0.15, duration: 0.9, ease: 'power3.out',
+        scrollTrigger: { trigger: '.closing', start: 'top 82%' }
+      });
+      gsap.from('[data-anim="cta"]', {
+        opacity: 0, y: 14, duration: 0.9, ease: 'power3.out',
+        scrollTrigger: { trigger: '.closing', start: 'top 78%' }
+      });
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
+  })();
 </script>
 
 <style>
-  /* ════════════════════════════════════════════════════════
-     BASE
-     ════════════════════════════════════════════════════════ */
-  .page { display:flex; flex-direction:column; min-height:100vh; }
-  main { flex:1; }
+  .page { padding-top: 0; }
 
-  /* Grain overlay — konsisten dengan beranda & puisi */
-  .page::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    background-size: 180px 180px;
-    opacity: 0.035;
-    pointer-events: none;
-    z-index: 999;
-    animation: grainShift 0.5s steps(2) infinite;
-  }
-  @keyframes grainShift {
-    0%, 100% { transform: translate(0, 0); }
-    50% { transform: translate(-1px, 1px); }
-  }
-
-  .container {
+  /* ── Intro ── */
+  .intro {
     max-width: 640px;
     margin: 0 auto;
-    padding: 4rem 1.5rem 6rem;
-  }
-
-  /* ════════════════════════════════════════════════════════
-     HERO SECTION — Foto & Nama
-     ════════════════════════════════════════════════════════ */
-  .hero-section {
-    margin-bottom: 2.5rem;
-    position: relative;
-  }
-
-  .foto-wrap {
-    position: relative;
-    width: 110px;
-    height: 110px;
-    margin-bottom: 2rem;
-    will-change: transform;
-  }
-
-  .foto {
-    width: 110px;
-    height: 110px;
-    border-radius: 50%;
-    object-fit: cover;
-    object-position: center top;
-    border: 1px solid var(--ink-line);
-    filter: grayscale(20%);
-    display: block;
-    position: relative;
-    z-index: 1;
-    transition: filter 0.3s;
-    will-change: transform, filter, opacity;
-  }
-  .foto:hover { filter: grayscale(0%); }
-
-  .foto-glow {
-    position: absolute;
-    inset: -15px;
-    background: var(--teal);
-    filter: blur(40px);
-    border-radius: 50%;
-    z-index: 0;
-    opacity: 0;
-    will-change: transform, opacity;
-  }
-
-  @keyframes breathe {
-    0%, 100% { opacity: 0.3; transform: scale(0.95); }
-    50%      { opacity: 0.5; transform: scale(1.05); }
-  }
-
-  /* Name — Split text ready */
-  .name {
-    font-family: var(--display);
-    font-size: clamp(2.8rem, 10vw, 5rem);
-    font-weight: 400;
-    line-height: 1.1;
-    letter-spacing: -.02em;
-    color: var(--fog);
-    margin-bottom: 1.5rem;
-  }
-  .name .word {
-    display: inline-block;
-    margin-right: 0.2em;
-    white-space: nowrap;
-  }
-  .name .char {
-    display: inline-block;
-    will-change: transform, filter, opacity;
-  }
-
-  /* Rule expand */
-  .rule {
-    display: flex;
-    align-items: center;
-    gap: .75rem;
-  }
-  .r-line {
-    flex: 1;
-    height: 1px;
-    background: var(--ink-line);
-  }
-  .r-mid {
-    color: var(--teal);
-    opacity: .4;
-    font-size: 1rem;
-  }
-
-  /* ════════════════════════════════════════════════════════
-     QUOTE — Border draw + line reveal
-     ════════════════════════════════════════════════════════ */
-  .quote {
-    position: relative;
-    margin: 2.5rem 0;
-    padding: 2rem 1.75rem;
-    background: linear-gradient(to right, var(--teal-faint), transparent 80%);
-    border-radius: 0 4px 4px 0;
-    overflow: hidden;
-  }
-  
-  .quote-border {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 3px;
-    height: 0;
-    background: var(--teal);
-  }
-  
-  .q-line {
-    font-family: var(--display);
-    font-style: italic;
-    font-size: clamp(1.1rem, 3.5vw, 1.4rem);
-    font-weight: 400;
-    line-height: 1.8;
-    color: var(--fog-dim);
-    will-change: transform, filter, opacity;
-  }
-  .q2 { color: var(--fog); }
-
-  /* ════════════════════════════════════════════════════════
-     BIO
-     ════════════════════════════════════════════════════════ */
-  .bio {
-    margin: 2.5rem 0;
+    padding: 8.5rem 1.5rem 2rem;
+    text-align: center;
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: 1.1rem;
   }
-  .bio p {
-    font-family: var(--serif);
+  .kicker {
+    font-family: var(--ui);
+    font-size: 0.62rem;
+    letter-spacing: 0.4em;
+    text-indent: 0.4em;
+    text-transform: uppercase;
+    color: var(--copper);
+  }
+  .title {
+    font-family: var(--display);
+    font-weight: 380;
+    font-style: italic;
+    font-variation-settings: "opsz" 144, "SOFT" 50;
+    font-size: clamp(2.6rem, 7vw, 4.4rem);
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+    background: linear-gradient(180deg, var(--paper) 0%, var(--copper-bright) 100%);
+    -webkit-background-clip: text;
+            background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .role {
+    font-family: var(--display);
+    font-style: italic;
+    color: var(--paper-mid);
     font-size: 1rem;
-    line-height: 1.9;
-    color: var(--fog-dim);
-    will-change: transform, opacity;
+  }
+  .portrait {
+    margin-top: 1.4rem;
+    width: 168px;
+    height: 168px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 1px solid rgba(198,148,112,0.35);
+    box-shadow: 0 0 0 6px rgba(198,148,112,0.05);
+  }
+  .portrait img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+    filter: grayscale(15%) contrast(1.05);
+    transition: filter 0.6s ease;
+  }
+  .portrait:hover img { filter: grayscale(0%) contrast(1.05); }
+
+  /* ── Body ── */
+  .body {
+    max-width: 60ch;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.6rem;
+  }
+  .body p {
+    font-family: var(--serif);
+    font-size: 1.08rem;
+    line-height: 1.95;
+    color: var(--paper-mid);
+  }
+  .body p em {
+    font-style: italic;
+    color: var(--copper-bright);
   }
 
-  /* ════════════════════════════════════════════════════════
-     STATS — Counter + reveal
-     ════════════════════════════════════════════════════════ */
+  /* ── Quote ── */
+  .quote-sec {
+    padding: 3rem 1.5rem;
+    max-width: 720px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  .quote p {
+    font-family: var(--display);
+    font-weight: 350;
+    font-size: clamp(1.4rem, 3.6vw, 2.2rem);
+    line-height: 1.5;
+    color: var(--paper);
+    letter-spacing: -0.012em;
+  }
+  .quote p em {
+    font-style: italic;
+    color: var(--copper-bright);
+    font-weight: 380;
+  }
+
+  /* ── Stats ── */
+  .stats-sec {
+    padding: 2rem 1.5rem;
+    max-width: 640px;
+    margin: 0 auto;
+  }
   .stats {
     display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    margin: 2.5rem 0;
-    padding: 1.5rem;
-    background: var(--ink-card);
-    border: 1px solid var(--ink-line);
-    border-radius: 4px;
+    justify-content: center;
+    align-items: baseline;
     flex-wrap: wrap;
-    will-change: transform, opacity;
+    gap: 1.6rem 2.4rem;
+    border-top: 1px solid rgba(198,148,112,0.16);
+    border-bottom: 1px solid rgba(198,148,112,0.16);
+    padding: 1.8rem 0;
   }
-  .stat {
+  .stats > div {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .stats strong {
+    font-family: var(--display);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 2rem;
+    color: var(--copper-bright);
+    line-height: 1;
+  }
+  .stats span {
+    font-family: var(--ui);
+    font-size: 0.55rem;
+    text-transform: uppercase;
+    letter-spacing: 0.32em;
+    text-indent: 0.32em;
+    color: var(--paper-dim);
+  }
+
+  /* ── Closing ── */
+  .closing {
+    padding: 4rem 1.5rem 3rem;
+    text-align: center;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: .2rem;
-    will-change: transform, opacity;
+    gap: 0.5rem;
   }
-  .sn {
+  .closing p {
     font-family: var(--display);
-    font-size: 1.8rem;
-    color: var(--teal);
-    line-height: 1;
+    font-style: italic;
+    color: var(--paper-mid);
+    font-size: 1.05rem;
   }
-  .sl {
-    font-family: var(--mono);
-    font-size: .58rem;
-    text-transform: uppercase;
-    letter-spacing: .12em;
-    color: var(--fog-ghost);
+  .sign {
+    font-size: 1.4rem !important;
+    color: var(--paper) !important;
+    margin-bottom: 1.6rem;
   }
-  .sdiv {
-    color: var(--ink-line);
-    font-size: 1.5rem;
-    flex: 1;
-    text-align: center;
-    will-change: transform, opacity;
-  }
-
-  /* ════════════════════════════════════════════════════════
-     CTA
-     ════════════════════════════════════════════════════════ */
   .cta {
-    font-family: var(--mono);
-    font-size: .68rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    margin-top: 0.6rem;
+    padding: 0.9rem 1.6rem;
+    border: 1px solid rgba(198,148,112,0.5);
+    color: var(--paper);
+    font-family: var(--ui);
+    font-weight: 500;
+    font-size: 0.66rem;
     text-transform: uppercase;
-    letter-spacing: .14em;
-    color: var(--teal-soft);
-    transition: color 0.2s;
-    display: inline-block;
-    margin-top: 0.5rem;
-    will-change: transform, opacity;
+    letter-spacing: 0.3em;
+    text-indent: 0.3em;
+    transition:
+      background 0.4s ease,
+      border-color 0.4s ease,
+      color 0.4s ease,
+      gap 0.5s var(--ease-poetic);
   }
-  .cta:hover { color: var(--teal); }
+  .cta:hover {
+    background: rgba(198,148,112,0.10);
+    border-color: var(--copper-bright);
+    color: var(--copper-bright);
+    gap: 1.2rem;
+  }
 
-  /* ════════════════════════════════════════════════════════
-     KEYFRAMES
-     ════════════════════════════════════════════════════════ */
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(16px); }
-    to   { opacity: 1; transform: translateY(0); }
+  /* ── Mobile ── */
+  @media (max-width: 720px) {
+    .intro { padding: 7rem 1.1rem 1.6rem; }
+    .portrait { width: 140px; height: 140px; }
+    .body { padding: 2.4rem 1.1rem; gap: 1.4rem; }
+    .body p { font-size: 1rem; line-height: 1.85; }
+    .quote-sec { padding: 2.4rem 1.1rem; }
+    .stats-sec { padding: 1.6rem 1.1rem; }
+    .stats { gap: 1.2rem 1.6rem; padding: 1.4rem 0; }
+    .stats strong { font-size: 1.7rem; }
+    .closing { padding: 3.2rem 1.1rem 2rem; }
   }
 </style>

@@ -1,45 +1,324 @@
 ---
 import Layout    from '../layouts/Layout.astro';
 import Header    from '../components/Header.astro';
-import PuisiCard  from '../components/PuisiCard.astro';
+import PuisiCard from '../components/PuisiCard.astro';
 import Footer    from '../components/Footer.astro';
 import { getAllPuisi } from '../lib/supabase.js';
 
 const puisiList = await getAllPuisi();
+
+const byYear = puisiList.reduce((acc, p) => {
+  const y = new Date(p.tanggal).getFullYear();
+  (acc[y] ||= []).push(p);
+  return acc;
+}, {});
+const years = Object.keys(byYear).sort((a, b) => b - a);
+const total = puisiList.length;
 ---
 
-<Layout title="Karya — Chao Ivans">
-  <div class="page">
-    <Header currentPath="/semua" />
-    <main>
-      <div class="container">
-        <header class="head">
-          <h1 class="title">Karya</h1>
-          <p class="sub">{puisiList.length} puisi</p>
+<Layout title="Karya — Ruang Ivans" description="Katalog seluruh puisi karya Chao Ivans.">
+  <Header currentPath="/semua" />
+
+  <main class="page">
+
+    <!-- ── Intro: clean & simple ── -->
+    <section class="intro">
+      <!-- <p class="kicker" data-anim="kicker">— katalog karya</p> -->
+      <h1 class="title" data-anim="title">Seluruh karya.</h1>
+      <p class="lead" data-anim="lead">
+        Setiap puisi adalah jejak kecil, <br/> 
+        sebuah napas yang sempat
+        terhembus di atas kertas.
+      </p>
+      {puisiList.length > 0 && (
+        <div class="stats" data-anim="stats">
+          <span><strong data-count={total}>{total}</strong> karya</span>
+          <span class="sep" aria-hidden="true"></span>
+          <span><strong>{years.length}</strong> tahun</span>
+          <span class="sep" aria-hidden="true"></span>
+          <span><strong>id</strong> bahasa</span>
+        </div>
+      )}
+    </section>
+
+    {puisiList.length === 0 && (
+      <section class="empty">
+        <p>Lembaran belum dituliskan.<br/>Puisi pertama akan segera datang.</p>
+      </section>
+    )}
+
+    {years.map((year) => (
+      <section class="year-section" data-year={year}>
+        <header class="year-head">
+          <h2 class="year-num">{year}</h2>
+          <span class="year-line"></span>
+          <span class="year-count">{byYear[year].length} puisi</span>
         </header>
 
-        {puisiList.length > 0 ? (
-          <div class="grid">
-            {puisiList.map((p, i) => <PuisiCard puisi={p} index={i} />)}
-          </div>
-        ) : (
-          <p class="empty">Belum ada puisi. Tambahkan lewat Supabase.</p>
-        )}
-      </div>
-    </main>
-    <Footer />
-  </div>
+        <div class="year-grid">
+          {byYear[year].map((p, i) => (
+            <div class="year-cell">
+              <PuisiCard puisi={p} index={i} />
+            </div>
+          ))}
+        </div>
+      </section>
+    ))}
+
+    {puisiList.length > 0 && (
+      <section class="closing">
+        <p>Akhir dari sebuah cerita.<em> 
+        <br/> Mungkin esok akan ada lembaran baru. 
+        <br/> Mungkin  saja...</em></p>
+        <a href="/" class="back">
+          <svg viewBox="0 0 28 8" width="28" height="8"><path d="M28 4 H 4 M 7 1 L 4 4 L 7 7" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>kembali ke beranda</span>
+        </a>
+      </section>
+    )}
+
+  </main>
+
+  <Footer />
 </Layout>
 
+<script is:inline>
+  (() => {
+    const init = () => {
+      if (!window.gsap) return;
+      const gsap = window.gsap;
+      if (window.ScrollTrigger) gsap.registerPlugin(window.ScrollTrigger);
+
+      const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+      tl.from('[data-anim="kicker"]', { opacity: 0, y: 12, duration: 0.8 })
+        .from('[data-anim="title"]',  { opacity: 0, y: 24, filter: 'blur(6px)', duration: 1.0 }, 0.1)
+        .from('[data-anim="lead"]',   { opacity: 0, y: 16, duration: 0.9 }, 0.35)
+        .from('[data-anim="stats"] > *', { opacity: 0, y: 10, stagger: 0.06, duration: 0.7 }, 0.55);
+
+      document.querySelectorAll('[data-count]').forEach((el) => {
+        const target = parseInt(el.dataset.count, 10);
+        if (!Number.isFinite(target)) return;
+        gsap.fromTo(el, { textContent: 0 }, {
+          textContent: target,
+          duration: 1.4, ease: 'power2.out', delay: 0.6,
+          snap: { textContent: 1 },
+          onUpdate: function () { el.textContent = Math.round(this.targets()[0].textContent || 0); }
+        });
+      });
+
+      if (!window.ScrollTrigger) return;
+
+      gsap.utils.toArray('.year-section').forEach((sec) => {
+        gsap.from(sec.querySelector('.year-head'), {
+          opacity: 0, y: 22, duration: 0.95, ease: 'power3.out',
+          scrollTrigger: { trigger: sec, start: 'top 82%' }
+        });
+        gsap.from(sec.querySelector('.year-line'), {
+          scaleX: 0, transformOrigin: 'left', duration: 1.0, ease: 'power3.out',
+          scrollTrigger: { trigger: sec, start: 'top 82%' }
+        });
+        const cells = sec.querySelectorAll('.year-cell');
+        cells.forEach((cell, i) => {
+          gsap.from(cell, {
+            opacity: 0, y: 24, filter: 'blur(4px)',
+            duration: 0.9, ease: 'power3.out', delay: (i % 3) * 0.06,
+            scrollTrigger: { trigger: cell, start: 'top 88%' }
+          });
+        });
+      });
+
+      gsap.from('.closing > *', {
+        opacity: 0, y: 18, stagger: 0.12, duration: 0.9, ease: 'power3.out',
+        scrollTrigger: { trigger: '.closing', start: 'top 85%' }
+      });
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
+  })();
+</script>
+
 <style>
-  .page { display:flex; flex-direction:column; min-height:100vh; }
-  main  { flex:1; }
-  .container { max-width:860px; margin:0 auto; padding:3rem 1.5rem 5rem; }
-  .head { margin-bottom:2.5rem; padding-bottom:1.25rem; border-bottom:1px solid var(--ink-line); }
-  .title { font-family:var(--display); font-size:clamp(2rem,7vw,3rem); font-weight:400; font-style:italic; color:var(--fog); margin-bottom:.3rem; }
-  .sub   { font-family:var(--mono); font-size:.65rem; text-transform:uppercase; letter-spacing:.12em; color:var(--fog-ghost); }
-  .grid  { display:grid; grid-template-columns:1fr; gap:1px; background:var(--ink-line); border:1px solid var(--ink-line); border-radius:4px; overflow:hidden; }
-  @media(min-width:640px){ .grid{grid-template-columns:repeat(2,1fr)} }
-  @media(min-width:900px){ .grid{grid-template-columns:repeat(3,1fr)} }
-  .empty { font-family:var(--serif); font-style:italic; color:var(--fog-ghost); text-align:center; padding:3rem 0; }
+  .page { padding-top: 0; }
+
+  /* ── Intro ── */
+  .intro {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 8.5rem 1.5rem 2.5rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.4rem;
+  }
+  .kicker {
+    font-family: var(--ui);
+    font-size: 0.62rem;
+    letter-spacing: 0.4em;
+    text-indent: 0.4em;
+    text-transform: uppercase;
+    color: var(--copper);
+  }
+  .title {
+    font-family: var(--display);
+    font-weight: 380;
+    font-style: italic;
+    font-variation-settings: "opsz" 144, "SOFT" 50;
+    font-size: clamp(2.6rem, 7vw, 4.4rem);
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+    background: linear-gradient(180deg, var(--paper) 0%, var(--copper-bright) 100%);
+    -webkit-background-clip: text;
+            background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .lead {
+    max-width: 52ch;
+    font-family: var(--display);
+    font-style: italic;
+    font-size: clamp(1rem, 1.8vw, 1.12rem);
+    line-height: 1.85;
+    color: var(--paper-mid);
+  }
+  .stats {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 0.5rem;
+    font-family: var(--ui);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.32em;
+    text-indent: 0.32em;
+    color: var(--paper-dim);
+  }
+  .stats > span { display: inline-flex; align-items: baseline; gap: 0.4rem; }
+  .stats strong {
+    font-family: var(--display);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 1.05rem;
+    text-transform: none;
+    letter-spacing: 0;
+    text-indent: 0;
+    color: var(--copper-bright);
+  }
+  .stats .sep {
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--copper);
+    opacity: 0.5;
+  }
+
+  /* ── Empty ── */
+  .empty {
+    padding: 5rem 1.5rem;
+    text-align: center;
+    font-family: var(--display);
+    font-style: italic;
+    color: var(--paper-mid);
+    font-size: 1.05rem;
+    line-height: 1.85;
+  }
+
+  /* ── Year section ── */
+  .year-section {
+    padding: 4rem 1.5rem;
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+  .year-head {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 1.4rem;
+    align-items: baseline;
+    margin-bottom: 2.4rem;
+    padding-bottom: 1rem;
+  }
+  .year-num {
+    font-family: var(--display);
+    font-style: italic;
+    font-weight: 380;
+    font-variation-settings: "opsz" 144;
+    font-size: clamp(2.2rem, 5vw, 3.4rem);
+    line-height: 1;
+    letter-spacing: -0.025em;
+    color: var(--copper-bright);
+  }
+  .year-line {
+    height: 1px;
+    background: linear-gradient(90deg, var(--copper-soft), transparent);
+    align-self: center;
+    transform-origin: left;
+    margin-top: 0.4rem;
+  }
+  .year-count {
+    font-family: var(--ui);
+    font-size: 0.6rem;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    text-indent: 0.32em;
+    color: var(--paper-dim);
+  }
+
+  @media (max-width: 600px) {
+    .year-head { grid-template-columns: auto 1fr; gap: 0.8rem; }
+    .year-line { grid-column: 1 / -1; margin-top: 0.2rem; }
+    .year-count { grid-column: 2; justify-self: end; }
+  }
+
+  .year-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.4rem;
+  }
+  @media (min-width: 640px) {
+    .year-grid { grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
+  }
+  @media (min-width: 980px) {
+    .year-grid { grid-template-columns: repeat(3, 1fr); gap: 1.6rem; }
+  }
+
+  /* ── Closing ── */
+  .closing {
+    padding: 5rem 1.5rem 3rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.4rem;
+  }
+  .closing p {
+    font-family: var(--display);
+    font-style: italic;
+    color: var(--paper-mid);
+    font-size: 1.05rem;
+    line-height: 1.7;
+  }
+  .closing p em { color: var(--paper); }
+  .back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    font-family: var(--ui);
+    font-weight: 500;
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.32em;
+    text-indent: 0.32em;
+    color: var(--copper);
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--copper-soft);
+    transition: color 0.4s ease, gap 0.5s var(--ease-poetic), border-color 0.4s ease;
+  }
+  .back:hover { color: var(--copper-bright); gap: 1.1rem; border-color: var(--copper-bright); }
+
+  /* ── Mobile tightening ── */
+  @media (max-width: 720px) {
+    .intro { padding: 7rem 1.1rem 2rem; gap: 1.1rem; }
+    .year-section { padding: 2.8rem 1.1rem; }
+    .closing { padding: 4rem 1.1rem 2rem; }
+  }
 </style>

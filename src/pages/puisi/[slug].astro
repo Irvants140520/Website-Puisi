@@ -1,7 +1,7 @@
 ---
-import Layout  from '../../layouts/Layout.astro';
-import Header  from '../../components/Header.astro';
-import Footer  from '../../components/Footer.astro';
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
 import { getPuisiBySlug, getAllPuisi, tambahView } from '../../lib/supabase.js';
 
 const { slug } = Astro.params;
@@ -18,669 +18,709 @@ const next  = idx > 0                ? semua[idx - 1] : null;
 
 function formatTgl(str) {
   return new Date(str).toLocaleDateString('id-ID', {
-    weekday:'long', day:'numeric', month:'long', year:'numeric'
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
   });
 }
 
-const paragraphs = puisi.isi.trim().split(/\n\n+/);
+function romanize(num) {
+  const lookup = [
+    ['M',1000],['CM',900],['D',500],['CD',400],
+    ['C',100],['XC',90],['L',50],['XL',40],
+    ['X',10],['IX',9],['V',5],['IV',4],['I',1],
+  ];
+  let n = num + 1, out = '';
+  for (const [r, v] of lookup) { while (n >= v) { out += r; n -= v; } }
+  return out;
+}
+
+const stanzas = puisi.isi.trim().split(/\n\n+/);
+const firstStanza = stanzas[0] ?? '';
+const restStanzas = stanzas.slice(1);
 const pageUrl    = Astro.url.href;
 
 const wordCount  = puisi.isi.trim().split(/\s+/).length;
 const readMins   = Math.max(1, Math.round(wordCount / 80));
+const folio      = romanize(idx).toLowerCase();
+const totalFolio = romanize(semua.length - 1).toLowerCase();
 ---
 
-<Layout title={`${puisi.judul} — Chao Ivans`} description={puisi.pengantar ?? ''}>
+<Layout title={`${puisi.judul} — Chao Ivans`} description={puisi.pengantar ?? `Puisi karya Chao Ivans, dari lembaran ${folio}.`}>
 
-  <!-- Reading progress — glow line -->
+  <!-- Reading progress as a thin gold ink line on top -->
   <div class="progress-track" aria-hidden="true">
     <div class="progress-bar" id="progress-bar"></div>
-    <div class="progress-glow" id="progress-glow"></div>
   </div>
 
-  <div class="page">
-    <Header />
-    <main>
-      <article class="article" id="article">
+  <Header />
 
-        <!-- Ambient glow — drift lebih lambat, lebih besar -->
-        <div class="article-glow" aria-hidden="true"></div>
-        <div class="article-glow-2" aria-hidden="true"></div>
+  <!-- Vertical scroll progress as a vellum ink rail -->
+  <aside class="scroll-rail" aria-hidden="true">
+    <span class="rail-track"></span>
+    <span class="rail-fill" id="rail-fill"></span>
+    <span class="rail-folio">{folio}</span>
+    <span class="rail-total">/ {totalFolio}</span>
+  </aside>
 
-        <!-- Header — reveal teatrikal -->
-        <header class="poem-head" id="poem-head">
-          <p class="date" data-reveal="up">{formatTgl(puisi.tanggal)}</p>
-          <h1 class="title" data-reveal="blur">{puisi.judul}</h1>
-          <p class="read-time" data-reveal="up">{readMins} menit baca</p>
-          {puisi.pengantar && <p class="pengantar" data-reveal="fade">{puisi.pengantar}</p>}
-        </header>
+  <main class="page">
+    <article class="article" id="article">
 
-        <div class="rule" data-reveal="expand">
-          <span class="r-line r-left"></span>
-          <span class="r-dash">oleh Chao Ivans</span>
-          <span class="r-line r-right"></span>
+      <!-- Ambient glows -->
+      <div class="glow glow-a" aria-hidden="true"></div>
+      <div class="glow glow-b" aria-hidden="true"></div>
+
+      <!-- Manuscript header -->
+      <header class="poem-head">
+        <p class="folio-line" data-anim="folio">
+          <span class="fl-mark">∽</span>
+          <span class="fl-text">folio {folio} · puisi</span>
+          <span class="fl-mark">∽</span>
+        </p>
+
+        <p class="date" data-anim="date">{formatTgl(puisi.tanggal)}</p>
+
+        <h1 class="title" data-anim="title">{puisi.judul}</h1>
+
+        <svg class="title-stroke" viewBox="0 0 400 16" aria-hidden="true">
+          <path id="ts-path"
+            d="M4 10 Q 80 2, 200 8 T 396 8"
+            stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+        </svg>
+
+        <p class="byline" data-anim="byline">
+          <span>oleh <em>Chao Ivans</em></span>
+          <span class="sep">·</span>
+          <span>{readMins} menit baca</span>
+        </p>
+
+        {puisi.pengantar && (
+          <p class="pengantar" data-anim="pengantar">
+            <span class="pq-mark">“</span>
+            {puisi.pengantar}
+            <span class="pq-mark">”</span>
+          </p>
+        )}
+      </header>
+
+      <!-- Body -->
+      <div class="body">
+
+        <!-- First stanza: TypeIt animation, with drop cap -->
+        <div class="stanza stanza-first">
+          <p class="stanza-typed" id="first-stanza" data-raw={firstStanza}></p>
         </div>
 
-        <!-- Body — stanza muncul seperti gelombang -->
-        <div class="body" id="poem-body">
-          {paragraphs.map((p, i) => (
-            <p
-              class={`stanza${i === 0 ? ' stanza-first' : ''}`}
-              data-stanza={i}
-              data-reveal="stanza"
-            >
-              {p}
-            </p>
-          ))}
-        </div>
-
-        <!-- End mark — fade in terpisah -->
-        <div class="end-mark" data-reveal="up">
-          <span class="end-dash">—</span>
-          <span class="end-views">𓁹 {puisi.views ?? 0} kali dibaca</span>
-        </div>
-
-        <!-- Share — slide up -->
-        <div class="share" data-reveal="up">
-          <p class="share-label">Bagikan puisi ini</p>
-          <div class="share-row">
-            <button class="sbtn" id="btn-native">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-              Bagikan
-            </button>
-            <button class="sbtn" id="btn-copy">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012 2v1"/></svg>
-              <span id="copy-lbl">Salin Link</span>
-            </button>
-            <a class="sbtn sbtn-wa" href={`https://wa.me/?text=${encodeURIComponent(`"${puisi.judul}" — Chao Ivans\n${pageUrl}`)}`} target="_blank" rel="noopener">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.138.562 4.144 1.541 5.876L0 24l6.303-1.519A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.893 0-3.671-.497-5.214-1.366l-.374-.219-3.742.902.938-3.651-.24-.386A9.946 9.946 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
-              WhatsApp
-            </a>
-            <a class="sbtn sbtn-tw" href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`"${puisi.judul}" — Chao Ivans`)}&url=${encodeURIComponent(pageUrl)}`} target="_blank" rel="noopener">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.259 5.629 5.905-5.629zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-              X / Twitter
-            </a>
+        {restStanzas.map((p, i) => (
+          <div class="stanza" data-stanza-index={i + 1}>
+            <p class="stanza-text">{p}</p>
           </div>
+        ))}
+
+      </div>
+
+      <!-- End mark -->
+      <div class="end-mark" data-anim="endmark">
+        <span class="em-orn" aria-hidden="true">∽ ∼ ∽</span>
+        <p class="em-fin">— selesai —</p>
+        <p class="em-meta">
+          <span>𓁹 {puisi.views ?? 0} kali dibaca</span>
+          <span class="dot">·</span>
+          <span>{wordCount} kata</span>
+        </p>
+      </div>
+
+      <!-- Share -->
+      <section class="share" data-anim="share">
+        <p class="share-label">— bagikan puisi ini —</p>
+        <div class="share-row">
+          <button class="sbtn" id="btn-native">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            Bagikan
+          </button>
+          <button class="sbtn" id="btn-copy">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            <span id="copy-lbl">Salin Tautan</span>
+          </button>
+          <a class="sbtn sbtn-wa" href={`https://wa.me/?text=${encodeURIComponent(`"${puisi.judul}" — Chao Ivans\n${pageUrl}`)}`} target="_blank" rel="noopener">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zM12 0C5.373 0 0 5.373 0 12c0 2.138.562 4.144 1.541 5.876L0 24l6.303-1.519A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.893 0-3.671-.497-5.214-1.366l-.374-.219-3.742.902.938-3.651-.24-.386A9.946 9.946 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+            WhatsApp
+          </a>
+          <a class="sbtn sbtn-tw" href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`"${puisi.judul}" — Chao Ivans`)}&url=${encodeURIComponent(pageUrl)}`} target="_blank" rel="noopener">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.259 5.629 5.905-5.629zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            X / Twitter
+          </a>
         </div>
+      </section>
 
-        <!-- Nav — parallax subtle -->
-        <nav class="pnav" data-reveal="up">
-          {prev ? (
-            <a href={`/puisi/${prev.slug}`} class="pnav-item pnav-prev">
-              <span class="pnav-dir">← Sebelumnya</span>
-              <span class="pnav-title">{prev.judul}</span>
-            </a>
-          ) : <div />}
-          <a href="/semua" class="pnav-all">Semua Karya</a>
-          {next ? (
-            <a href={`/puisi/${next.slug}`} class="pnav-item pnav-next">
-              <span class="pnav-dir">Berikutnya →</span>
-              <span class="pnav-title">{next.judul}</span>
-            </a>
-          ) : <div />}
-        </nav>
+      <!-- Page-turn navigation -->
+      <nav class="pnav" data-anim="nav">
+        {prev ? (
+          <a href={`/puisi/${prev.slug}`} class="pnav-item pnav-prev">
+            <span class="pnav-dir">← lembaran sebelumnya</span>
+            <span class="pnav-title">{prev.judul}</span>
+          </a>
+        ) : <div />}
+        <a href="/semua" class="pnav-all">
+          <span class="pnav-orn">∽</span>
+          <span>katalog</span>
+          <span class="pnav-orn">∽</span>
+        </a>
+        {next ? (
+          <a href={`/puisi/${next.slug}`} class="pnav-item pnav-next">
+            <span class="pnav-dir">lembaran berikutnya →</span>
+            <span class="pnav-title">{next.judul}</span>
+          </a>
+        ) : <div />}
+      </nav>
 
-      </article>
-    </main>
-    <Footer />
-  </div>
+    </article>
+  </main>
+
+  <Footer />
 </Layout>
 
-<!-- ════════════════════════════════════════════════════════
-     SCRIPT — Animation Engine
-     ════════════════════════════════════════════════════════ -->
 <script is:inline>
-(function() {
+(function () {
   'use strict';
-  
-  const nextFrame = () => new Promise(r => requestAnimationFrame(r));
-  
-  /* ── 1. READING PROGRESS — Glow Line ───────────────── */
-  const bar = document.getElementById('progress-bar');
-  const glow = document.getElementById('progress-glow');
-  
-  function updateProgress() {
-    const scrolled  = window.scrollY;
-    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-    const pct = docHeight > 0 ? (scrolled / docHeight) * 100 : 0;
-    
-    if (bar) bar.style.width = `${pct}%`;
-    if (glow) {
-      glow.style.width = `${pct}%`;
-      // Glow intensifies saat scroll
-      glow.style.opacity = 0.3 + (pct / 200);
-    }
-  }
-  
-  window.addEventListener('scroll', updateProgress, { passive: true });
-  updateProgress();
 
-  /* ── 2. SCROLL-TRIGGERED REVEAL ENGINE ─────────────── */
-  const revealElements = document.querySelectorAll('[data-reveal]');
-  
-  // Set initial states berdasarkan tipe
-  revealElements.forEach(el => {
-    const type = el.dataset.reveal;
-    el.classList.add(`reveal-${type}-hidden`);
+  const ready = () => new Promise(r => {
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', r);
+    else r();
   });
-  
-  // Force reflow
-  nextFrame().then(() => {
-    revealElements.forEach(el => {
-      const type = el.dataset.reveal;
-      // Pasang transition setelah frame stabil
-      requestAnimationFrame(() => {
-        el.classList.add(`reveal-${type}-ready`);
+
+  ready().then(init);
+
+  function init () {
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    /* ── Reading progress (top + side rail) ── */
+    const bar  = document.getElementById('progress-bar');
+    const rail = document.getElementById('rail-fill');
+    const updateProgress = () => {
+      const scrolled  = window.scrollY;
+      const docH = document.documentElement.scrollHeight - window.innerHeight;
+      const pct = docH > 0 ? Math.min(1, scrolled / docH) : 0;
+      if (bar)  bar.style.width  = (pct * 100) + '%';
+      if (rail) rail.style.height = (pct * 100) + '%';
+    };
+    window.addEventListener('scroll', updateProgress, { passive: true });
+    updateProgress();
+
+    if (!window.gsap) return;
+    const gsap = window.gsap;
+    gsap.registerPlugin(window.ScrollTrigger);
+
+    /* ── Header reveal ── */
+    const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+    tl.from('[data-anim="folio"]', { opacity: 0, y: 12, duration: 0.9 }, 0)
+      .from('[data-anim="date"]',  { opacity: 0, y: 12, duration: 0.9 }, 0.15)
+      .from('[data-anim="title"]', {
+        opacity: 0, y: 40, filter: 'blur(16px)', duration: 1.4
+      }, 0.3)
+      .from('.title-stroke', { opacity: 0, duration: 0.4 }, 0.7);
+
+    // Title brush stroke
+    const tsPath = document.getElementById('ts-path');
+    if (tsPath) {
+      const len = tsPath.getTotalLength();
+      gsap.set(tsPath, { strokeDasharray: len, strokeDashoffset: len });
+      gsap.to(tsPath, { strokeDashoffset: 0, duration: 1.6, delay: 0.9, ease: 'power2.inOut' });
+    }
+
+    tl.from('[data-anim="byline"]', { opacity: 0, y: 12, duration: 0.8 }, 1.0);
+    if (document.querySelector('[data-anim="pengantar"]')) {
+      tl.from('[data-anim="pengantar"]', { opacity: 0, y: 16, duration: 1 }, 1.2);
+    }
+
+    /* ── First stanza: TypeIt with drop cap ── */
+    const first = document.getElementById('first-stanza');
+    if (first && window.TypeIt) {
+      const raw = first.dataset.raw || '';
+      first.textContent = '';
+      // Wait until pengantar etc done (~2s)
+      const startDelay = reduced ? 100 : 1900;
+      new window.TypeIt(first, {
+        speed: reduced ? 1 : 28,
+        startDelay,
+        cursor: false,
+        lifeLike: true,
+        afterComplete: (instance) => {
+          // After typing done, wrap first letter for drop-cap
+          applyDropCap(first);
+        }
+      }).type(raw.replace(/\n/g, '<br/>')).go();
+    }
+
+    function applyDropCap (el) {
+      // Find first textual letter and wrap
+      const html = el.innerHTML;
+      const m = html.match(/^([\s\S]*?)([A-Za-zÀ-ÿ])/);
+      if (!m) return;
+      el.innerHTML = m[1] + '<span class="dropcap">' + m[2] + '</span>' + html.slice(m[0].length);
+      const dc = el.querySelector('.dropcap');
+      if (dc) gsap.from(dc, { opacity: 0, scale: 0.4, duration: 0.9, ease: 'back.out(1.6)' });
+    }
+
+    /* ── Subsequent stanzas: scroll wave ── */
+    gsap.utils.toArray('.stanza:not(.stanza-first)').forEach((s, i) => {
+      gsap.from(s, {
+        opacity: 0, y: 40, filter: 'blur(8px)',
+        duration: 1.2, ease: 'power3.out', delay: (i % 3) * 0.05,
+        scrollTrigger: { trigger: s, start: 'top 88%' }
       });
     });
-  });
-  
-  // IntersectionObserver untuk trigger
-  const revealObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        const el = entry.target;
-        const type = el.dataset.reveal;
-        const delay = parseFloat(el.dataset.delay || 0);
-        
-        setTimeout(() => {
-          el.classList.remove(`reveal-${type}-hidden`);
-          el.classList.add(`reveal-${type}-visible`);
-        }, delay);
-        
-        revealObserver.unobserve(el);
-      }
-    });
-  }, { threshold: 0.1, rootMargin: '0px 0px -30px 0px' });
-  
-  revealElements.forEach(el => revealObserver.observe(el));
 
-  /* ── 3. STANZA WAVE REVEAL ─────────────────────────── */
-  const stanzas = document.querySelectorAll('.stanza[data-reveal="stanza"]');
-  
-  // Stanza punya reveal tersendiri — lebih dramatis
-  stanzas.forEach((s, i) => {
-    s.style.opacity = '0';
-    s.style.transform = 'translateY(35px) scale(0.98)';
-    s.style.filter = 'blur(8px)';
-    s.style.transition = 'none';
-  });
-  
-  nextFrame().then(() => {
-    stanzas.forEach(s => {
-      s.style.transition = `
-        opacity 1s cubic-bezier(0.22, 1, 0.36, 1),
-        transform 1s cubic-bezier(0.22, 1, 0.36, 1),
-        filter 1.2s cubic-bezier(0.22, 1, 0.36, 1)
-      `;
+    /* ── End-mark, share, nav ── */
+    gsap.from('[data-anim="endmark"] > *', {
+      opacity: 0, y: 18, stagger: 0.15, duration: 1, ease: 'power3.out',
+      scrollTrigger: { trigger: '.end-mark', start: 'top 85%' }
     });
-  });
-  
-  const stanzaObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        const el = entry.target;
-        const idx = parseInt(el.dataset.stanza || 0);
-        
-        // Wave stagger — tiap stanza 180ms lebih lambat
-        setTimeout(() => {
-          el.style.opacity = '1';
-          el.style.transform = 'translateY(0) scale(1)';
-          el.style.filter = 'blur(0px)';
-        }, idx * 180);
-        
-        stanzaObserver.unobserve(el);
-      }
+    gsap.from('[data-anim="share"] > *', {
+      opacity: 0, y: 16, stagger: 0.1, duration: 0.9, ease: 'power3.out',
+      scrollTrigger: { trigger: '.share', start: 'top 85%' }
     });
-  }, { threshold: 0.12, rootMargin: '0px 0px -50px 0px' });
-  
-  stanzas.forEach(s => stanzaObserver.observe(s));
+    gsap.from('[data-anim="nav"] > *', {
+      opacity: 0, y: 16, stagger: 0.1, duration: 0.9, ease: 'power3.out',
+      scrollTrigger: { trigger: '.pnav', start: 'top 90%' }
+    });
 
-  /* ── 4. PARALLAX AMBIENT GLOWS ─────────────────────── */
-  const glow1 = document.querySelector('.article-glow');
-  const glow2 = document.querySelector('.article-glow-2');
-  let ticking = false;
-  
-  window.addEventListener('scroll', () => {
-    if (!ticking) {
-      requestAnimationFrame(() => {
-        const y = window.scrollY;
-        if (glow1) glow1.style.transform = `translateY(${y * -0.04}px) translateX(${y * 0.02}px)`;
-        if (glow2) glow2.style.transform = `translateY(${y * 0.06}px) translateX(${y * -0.03}px)`;
-        ticking = false;
-      });
-      ticking = true;
+    /* ── Glow parallax ── */
+    gsap.to('.glow-a', { y: -100, x: 30, ease: 'none', scrollTrigger: { trigger: '.article', start: 'top top', end: 'bottom top', scrub: true } });
+    gsap.to('.glow-b', { y:  100, x: -30, ease: 'none', scrollTrigger: { trigger: '.article', start: 'top top', end: 'bottom top', scrub: true } });
+
+    /* ── Share button handlers ── */
+    const url   = window.location.href;
+    const title = document.querySelector('.title')?.textContent || '';
+    const btnNative = document.getElementById('btn-native');
+    if (navigator.share && btnNative) {
+      btnNative.addEventListener('click', () => navigator.share({ title, url }).catch(() => {}));
+    } else if (btnNative) {
+      btnNative.style.display = 'none';
     }
-  }, { passive: true });
-
-  /* ── 5. SHARE BUTTONS ──────────────────────────────── */
-  const url   = window.location.href;
-  const title = document.querySelector('.title')?.textContent || '';
-
-  const btnNative = document.getElementById('btn-native');
-  if (navigator.share && btnNative) {
-    btnNative.addEventListener('click', () =>
-      navigator.share({ title, url }).catch(() => {})
-    );
-  } else if (btnNative) {
-    btnNative.style.display = 'none';
-  }
-
-  document.getElementById('btn-copy')?.addEventListener('click', () => {
-    navigator.clipboard.writeText(url).then(() => {
-      const lbl = document.getElementById('copy-lbl');
-      if (lbl) {
-        lbl.textContent = 'Tersalin!';
-        setTimeout(() => (lbl.textContent = 'Salin Link'), 2000);
-      }
+    document.getElementById('btn-copy')?.addEventListener('click', () => {
+      navigator.clipboard.writeText(url).then(() => {
+        const lbl = document.getElementById('copy-lbl');
+        if (lbl) {
+          lbl.textContent = 'Tersalin!';
+          setTimeout(() => (lbl.textContent = 'Salin Tautan'), 2000);
+        }
+      });
     });
-  });
+  }
 })();
 </script>
 
 <style>
-  /* ════════════════════════════════════════════════════════
-     BASE
-     ════════════════════════════════════════════════════════ */
-  .page { display:flex; flex-direction:column; min-height:100vh; }
-  main  { flex:1; }
+  .page { padding-top: 0; }
 
-  /* Grain overlay — konsisten dengan beranda */
-  .page::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    background-size: 180px 180px;
-    opacity: 0.035;
-    pointer-events: none;
-    z-index: 999;
-    animation: grainShift 0.5s steps(2) infinite;
-  }
-  @keyframes grainShift {
-    0%, 100% { transform: translate(0, 0); }
-    50% { transform: translate(-1px, 1px); }
-  }
-
-  /* ════════════════════════════════════════════════════════
-     PROGRESS BAR — Glow Line
-     ════════════════════════════════════════════════════════ */
+  /* ── Top progress bar ── */
   .progress-track {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
+    top: 0; left: 0; right: 0;
     height: 2px;
-    z-index: 1000;
+    z-index: 250;
     pointer-events: none;
-    background: rgba(0, 212, 184, 0.05);
+    background: rgba(201,160,74,0.04);
   }
-  
   .progress-bar {
     height: 100%;
     width: 0%;
-    background: linear-gradient(90deg, var(--teal), rgba(0,212,184,.6));
+    background: linear-gradient(90deg, var(--gold-bright), var(--gold), transparent);
+    box-shadow: 0 0 8px var(--gold-glow);
     transition: width 0.15s linear;
   }
-  
-  .progress-glow {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, transparent, var(--teal), transparent);
-    filter: blur(4px);
-    opacity: 0.3;
-    transition: width 0.15s linear, opacity 0.3s ease;
-  }
 
-  /* ════════════════════════════════════════════════════════
-     ARTICLE
-     ════════════════════════════════════════════════════════ */
-  .article {
+  /* ── Side scroll rail ── */
+  .scroll-rail {
+    position: fixed;
+    right: 1.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 80;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+    pointer-events: none;
+  }
+  .rail-track {
+    width: 1px;
+    height: 180px;
+    background: var(--ink-line);
     position: relative;
-    max-width: 580px;
-    margin: 0 auto;
-    padding: 3.5rem 1.5rem 5rem;
+  }
+  .rail-fill {
+    position: absolute;
+    top: calc(50% - 90px + 26px);
+    /* see right: rail-fill is layered inside rail using JS height */
+  }
+  /* better: compute fill inside the track */
+  .scroll-rail { gap: 0.4rem; }
+  .scroll-rail .rail-track {
     overflow: hidden;
   }
-
-  /* Dual ambient glow — bergerak berlawanan */
-  .article-glow {
+  .scroll-rail .rail-fill {
     position: absolute;
-    width: 500px;
-    height: 500px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(0,212,184,.04) 0%, transparent 70%);
-    top: -80px;
-    right: -150px;
-    pointer-events: none;
-    will-change: transform;
+    top: 0; left: 0;
+    width: 1px;
+    height: 0%;
+    background: linear-gradient(to bottom, var(--gold-bright), var(--gold));
+    box-shadow: 0 0 6px var(--gold-glow);
+    transition: height 0.15s linear;
   }
-  
-  .article-glow-2 {
-    position: absolute;
-    width: 400px;
-    height: 400px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(0,212,184,.03) 0%, transparent 65%);
-    bottom: 20%;
-    left: -200px;
-    pointer-events: none;
-    will-change: transform;
+  .rail-folio {
+    font-family: var(--display);
+    font-style: italic;
+    font-size: 0.9rem;
+    color: var(--gold);
   }
-
-  /* ════════════════════════════════════════════════════════
-     POEM HEADER — Reveal States
-     ════════════════════════════════════════════════════════ */
-  .poem-head { margin-bottom: 2rem; position: relative; z-index: 1; }
-
-  .date {
+  .rail-total {
     font-family: var(--mono);
-    font-size: .6rem;
-    letter-spacing: .14em;
-    text-transform: uppercase;
-    color: var(--fog-ghost);
-    margin-bottom: .75rem;
-    display: block;
+    font-size: 0.55rem;
+    color: var(--vellum-ghost);
+    letter-spacing: 0.18em;
+  }
+  @media (max-width: 980px) { .scroll-rail { display: none; } }
+
+  /* ── Article ── */
+  .article {
+    position: relative;
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 8rem 1.5rem 5rem;
+    overflow: clip;
+  }
+  .glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .glow-a {
+    width: 460px; height: 460px;
+    background: radial-gradient(circle, rgba(201,160,74,0.16), transparent 65%);
+    top: -100px; right: -200px;
+  }
+  .glow-b {
+    width: 380px; height: 380px;
+    background: radial-gradient(circle, rgba(168,84,64,0.12), transparent 65%);
+    bottom: 10%; left: -250px;
   }
 
-  /* TITLE — Blur Reveal */
+  /* ── Poem header ── */
+  .poem-head {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    margin-bottom: 4rem;
+  }
+  .folio-line {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.85rem;
+    color: var(--vellum-ghost);
+    margin-bottom: 1.4rem;
+  }
+  .fl-mark { color: var(--gold); opacity: 0.55; }
+  .fl-text {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.32em;
+    color: var(--gold);
+    opacity: 0.85;
+  }
+  .date {
+    font-family: var(--display);
+    font-style: italic;
+    font-size: 0.95rem;
+    color: var(--vellum-mid);
+    margin-bottom: 1.4rem;
+    text-transform: lowercase;
+  }
   .title {
     font-family: var(--display);
-    font-size: clamp(2rem, 7vw, 3rem);
-    font-weight: 400;
-    line-height: 1.15;
-    color: var(--fog);
-    margin-bottom: .5rem;
-    will-change: transform, filter, opacity;
+    font-weight: 300;
+    font-size: clamp(2.4rem, 7vw, 4.2rem);
+    line-height: 1.05;
+    color: var(--vellum);
+    letter-spacing: -0.025em;
+    margin-bottom: 1rem;
   }
-  
-  .reveal-blur-hidden {
-    opacity: 0;
-    filter: blur(16px) brightness(2);
-    transform: translateY(30px) scale(0.95);
+  .title-stroke {
+    display: block;
+    width: 70%;
+    max-width: 360px;
+    height: 16px;
+    margin: 0.5rem auto 1.6rem;
+    color: var(--gold);
+    opacity: 0.85;
   }
-  
-  .reveal-blur-ready {
-    transition: 
-      opacity 1s cubic-bezier(0.22, 1, 0.36, 1),
-      filter 1.4s cubic-bezier(0.22, 1, 0.36, 1),
-      transform 1s cubic-bezier(0.22, 1, 0.36, 1),
-      color 0.6s ease;
-  }
-  
-  .reveal-blur-visible {
-    opacity: 1;
-    filter: blur(0px) brightness(1);
-    transform: translateY(0) scale(1);
-  }
-
-  .read-time {
-    font-family: var(--mono);
-    font-size: .58rem;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    color: var(--teal);
-    opacity: .45;
-    margin-bottom: .9rem;
-  }
-
-  .pengantar {
-    font-family: var(--serif);
-    font-style: italic;
-    font-size: .95rem;
-    color: var(--fog-dim);
-    line-height: 1.7;
-    margin-top: .75rem;
-  }
-
-  /* ════════════════════════════════════════════════════════
-     RULE — Expand dari tengah
-     ════════════════════════════════════════════════════════ */
-  .rule {
-    margin: 1.75rem 0 2rem;
-    display: flex;
-    align-items: center;
-    gap: .75rem;
-    position: relative;
-    z-index: 1;
-  }
-  
-  .r-line {
-    flex: 1;
-    height: 1px;
-    background: var(--ink-line);
-    transform-origin: center;
-    transition: transform 1s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-  
-  .reveal-expand-hidden .r-left { transform: scaleX(0); transform-origin: right; }
-  .reveal-expand-hidden .r-right { transform: scaleX(0); transform-origin: left; }
-  .reveal-expand-visible .r-left,
-  .reveal-expand-visible .r-right { transform: scaleX(1); }
-  
-  .reveal-expand-hidden .r-dash {
-    opacity: 0;
-    transform: scale(0.8);
-    transition: opacity 0.6s 0.4s ease, transform 0.6s 0.4s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-  .reveal-expand-visible .r-dash {
-    opacity: 1;
-    transform: scale(1);
-  }
-  
-  .r-dash {
-    color: var(--teal);
-    opacity: 0.15;
-    font-size: 1.1rem;
-    white-space: nowrap;
-  }
-
-  /* ════════════════════════════════════════════════════════
-     POEM BODY — Stanza
-     ════════════════════════════════════════════════════════ */
-  .body {
-    margin-bottom: 3rem;
-    position: relative;
-    z-index: 1;
-  }
-
-  /* Drop cap — stanza pertama */
-  .stanza-first::first-letter {
-    float: left;
+  .byline {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.7rem;
     font-family: var(--display);
-    font-size: clamp(3rem, 12vw, 4.5rem);
-    line-height: 0.8;
-    padding-top: 4px;
-    padding-right: 10px;
-    color: var(--teal);
-    text-shadow: 0 0 20px rgba(0,212,184,.15);
+    font-style: italic;
+    font-size: 0.9rem;
+    color: var(--vellum-ghost);
+  }
+  .byline em {
+    color: var(--gold-bright);
+    font-style: italic;
+    font-weight: 400;
+  }
+  .byline .sep { opacity: 0.5; }
+  .pengantar {
+    margin: 1.8rem auto 0;
+    max-width: 50ch;
+    font-family: var(--display);
+    font-style: italic;
+    font-weight: 300;
+    font-size: 1.1rem;
+    color: var(--vellum-dim);
+    line-height: 1.75;
+  }
+  .pq-mark {
+    color: var(--gold);
+    opacity: 0.4;
+    font-size: 1.4em;
+    line-height: 0;
+    vertical-align: -0.3em;
   }
 
+  /* ── Body / stanzas ── */
+  .body {
+    position: relative;
+    z-index: 1;
+    margin-bottom: 4rem;
+  }
   .stanza {
+    margin-bottom: 2.6rem;
     font-family: var(--serif);
-    font-size: 1.15rem;
-    line-height: 2.1;
-    color: var(--fog);
-    white-space: pre-line;
-    margin-bottom: 2.5rem;
-    letter-spacing: .01em;
-    will-change: transform, filter, opacity;
+    font-size: 1.2rem;
+    line-height: 2.05;
+    color: var(--vellum);
+    letter-spacing: 0.005em;
+    will-change: transform, opacity, filter;
   }
   .stanza:last-child { margin-bottom: 0; }
-
-  /* ════════════════════════════════════════════════════════
-     REVEAL UTILITIES — Up & Fade
-     ════════════════════════════════════════════════════════ */
-  .reveal-up-hidden {
-    opacity: 0;
-    transform: translateY(25px);
-  }
-  .reveal-up-ready {
-    transition: 
-      opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1),
-      transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-  .reveal-up-visible {
-    opacity: 1;
-    transform: translateY(0);
+  .stanza-text, .stanza-typed { white-space: pre-line; }
+  .stanza-first {
+    font-size: 1.25rem;
+    color: var(--vellum);
   }
 
-  .reveal-fade-hidden {
-    opacity: 0;
-  }
-  .reveal-fade-ready {
-    transition: opacity 1s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-  .reveal-fade-visible {
-    opacity: 1;
+  /* drop cap (added by JS after typeit completes) */
+  .stanza-first :global(.dropcap) {
+    float: left;
+    font-family: var(--display);
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(3.2rem, 12vw, 4.6rem);
+    line-height: 0.85;
+    color: var(--gold);
+    padding: 8px 12px 0 0;
+    text-shadow: 0 0 22px rgba(201,160,74,0.25);
   }
 
-  /* ════════════════════════════════════════════════════════
-     END MARK
-     ════════════════════════════════════════════════════════ */
+  /* ── End mark ── */
   .end-mark {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: .75rem;
-    padding: 2rem 0;
+    text-align: center;
+    padding: 3rem 0 2rem;
   }
-  .end-dash {
-    color: var(--teal);
-    opacity: .3;
-    font-size: 1.2rem;
+  .em-orn {
+    display: block;
+    color: var(--gold);
+    opacity: 0.55;
+    letter-spacing: 0.5em;
+    margin-bottom: 0.8rem;
   }
-  .end-views {
+  .em-fin {
+    font-family: var(--display);
+    font-style: italic;
+    color: var(--vellum-mid);
+    font-size: 1.05rem;
+    margin-bottom: 0.5rem;
+  }
+  .em-meta {
     font-family: var(--mono);
-    font-size: .58rem;
-    letter-spacing: .1em;
-    color: var(--fog-dim);
-    opacity: .6;
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--vellum-ghost);
+    display: inline-flex;
+    gap: 0.7rem;
+    align-items: baseline;
   }
+  .em-meta .dot { opacity: 0.5; }
 
-  /* ════════════════════════════════════════════════════════
-     SHARE
-     ════════════════════════════════════════════════════════ */
+  /* ── Share ── */
   .share {
+    margin: 2rem 0;
+    padding: 1.5rem 1.4rem;
     border: 1px solid var(--ink-line);
-    border-radius: 4px;
-    padding: 1.25rem 1.4rem;
-    margin-bottom: 2.5rem;
-    background: var(--ink-card);
+    border-radius: 2px;
+    background: linear-gradient(135deg, rgba(201,160,74,0.04), transparent 80%);
+    text-align: center;
   }
   .share-label {
     font-family: var(--mono);
-    font-size: .6rem;
+    font-size: 0.6rem;
     text-transform: uppercase;
-    letter-spacing: .15em;
-    color: var(--fog-ghost);
-    margin-bottom: .85rem;
+    letter-spacing: 0.3em;
+    color: var(--gold);
+    opacity: 0.75;
+    margin-bottom: 1rem;
   }
-  .share-row { display: flex; flex-wrap: wrap; gap: .5rem; }
-
+  .share-row {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    justify-content: center;
+  }
   .sbtn {
     display: inline-flex;
     align-items: center;
-    gap: .4rem;
+    gap: 0.45rem;
     font-family: var(--mono);
-    font-size: .65rem;
-    letter-spacing: .08em;
-    color: var(--fog-dim);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--vellum-mid);
     background: var(--ink-raised);
     border: 1px solid var(--ink-line);
-    border-radius: 3px;
-    padding: .4rem .75rem;
+    border-radius: 2px;
+    padding: 0.5rem 0.85rem;
     cursor: pointer;
-    transition: color .2s, border-color .2s, background .2s, transform .2s;
+    transition: color 0.3s ease, border-color 0.3s ease, background 0.3s ease, transform 0.3s ease;
     text-decoration: none;
   }
   .sbtn:hover {
-    color: var(--fog);
-    border-color: var(--fog-ghost);
+    color: var(--gold-bright);
+    border-color: var(--gold-soft);
+    background: rgba(201,160,74,0.06);
     transform: translateY(-1px);
   }
-  .sbtn-wa:hover {
-    color: #25d366;
-    border-color: rgba(37,211,102,.3);
-    background: rgba(37,211,102,.06);
-  }
-  .sbtn-tw:hover {
-    color: #1d9bf0;
-    border-color: rgba(29,155,240,.3);
-    background: rgba(29,155,240,.06);
-  }
+  .sbtn-wa:hover { color: #25d366; border-color: rgba(37,211,102,0.4); }
+  .sbtn-tw:hover { color: #ffffff; border-color: var(--vellum-mid); background: rgba(255,255,255,0.04); }
 
-  /* ════════════════════════════════════════════════════════
-     NAV
-     ════════════════════════════════════════════════════════ */
+  /* ── Nav (page turn) ── */
   .pnav {
+    margin-top: 3rem;
+    padding-top: 2.5rem;
+    border-top: 1px solid var(--ink-line);
     display: grid;
     grid-template-columns: 1fr auto 1fr;
-    gap: .75rem;
+    gap: 1rem;
     align-items: center;
-    padding-top: 2rem;
-    border-top: 1px solid var(--ink-line);
   }
   .pnav-item {
     display: flex;
     flex-direction: column;
-    gap: .2rem;
-    padding: .65rem .75rem;
-    border-radius: 3px;
-    border: 1px solid transparent;
-    transition: border-color .2s, background .2s, transform .2s;
+    gap: 0.3rem;
+    padding: 0.7rem 0.9rem;
+    border-radius: 2px;
+    transition: background 0.3s ease, transform 0.4s var(--ease-poetic);
   }
+  .pnav-prev { text-align: left; }
+  .pnav-next { text-align: right; }
   .pnav-item:hover {
-    border-color: var(--ink-line);
-    background: var(--ink-card);
+    background: rgba(201,160,74,0.05);
     transform: translateY(-2px);
   }
-  .pnav-prev { align-items: flex-start; }
-  .pnav-next { align-items: flex-end; text-align: right; }
   .pnav-dir {
     font-family: var(--mono);
-    font-size: .58rem;
+    font-size: 0.55rem;
     text-transform: uppercase;
-    letter-spacing: .1em;
-    color: var(--teal-soft);
-    opacity: .7;
+    letter-spacing: 0.22em;
+    color: var(--vellum-ghost);
   }
   .pnav-title {
     font-family: var(--display);
     font-style: italic;
-    font-size: .9rem;
-    color: var(--fog-dim);
-    transition: color .2s;
+    font-size: 1rem;
+    color: var(--vellum);
+    line-height: 1.3;
   }
-  .pnav-item:hover .pnav-title { color: var(--fog); }
+  .pnav-item:hover .pnav-title { color: var(--gold-bright); }
+
   .pnav-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
     font-family: var(--mono);
-    font-size: .6rem;
+    font-size: 0.6rem;
     text-transform: uppercase;
-    letter-spacing: .1em;
-    color: var(--fog-dim);
-    text-align: center;
-    padding: .5rem .75rem;
+    letter-spacing: 0.2em;
+    color: var(--vellum-mid);
+    padding: 0.6rem 0.9rem;
     border: 1px solid var(--ink-line);
-    border-radius: 3px;
-    white-space: nowrap;
-    transition: all .2s;
+    border-radius: 2px;
+    transition: color 0.3s ease, border-color 0.3s ease, background 0.3s ease;
   }
+  .pnav-orn { color: var(--gold); opacity: 0.55; }
   .pnav-all:hover {
-    color: var(--teal);
-    border-color: var(--teal-soft);
-    background: var(--teal-faint);
-    transform: translateY(-2px);
+    color: var(--gold-bright);
+    border-color: var(--gold-soft);
+    background: rgba(201,160,74,0.05);
   }
-  
-    /* ════════════════════════════════════════════════════════
-     KEYFRAMES
-     ════════════════════════════════════════════════════════ */
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to   { opacity: 1; }
+
+  @media (max-width: 600px) {
+    .pnav { grid-template-columns: 1fr; gap: 0.6rem; }
+    .pnav-prev, .pnav-next { text-align: center; }
+  }
+
+  /* ════════════════════════════════════════════════
+     RESPONSIVE — MOBILE
+  ════════════════════════════════════════════════ */
+  @media (max-width: 720px) {
+    .article { padding: 6rem 1.1rem 3rem; }
+    .progress-track { height: 1.5px; }
+
+    .poem-head { margin-bottom: 2.6rem; }
+    .folio-line { gap: 0.55rem; margin-bottom: 1rem; }
+    .fl-text { font-size: 0.52rem; letter-spacing: 0.24em; }
+    .date { font-size: 0.85rem; margin-bottom: 1.1rem; }
+    .title { font-size: clamp(1.9rem, 9vw, 2.8rem) !important; line-height: 1.1; margin-bottom: 0.6rem; }
+    .title-stroke { width: 75%; max-width: 240px; height: 12px; margin: 0.2rem auto 1rem; }
+    .byline { font-size: 0.82rem; gap: 0.5rem; flex-wrap: wrap; justify-content: center; }
+    .pengantar { font-size: 0.98rem; line-height: 1.7; margin-top: 1.4rem; max-width: 38ch; }
+
+    .body { margin-bottom: 2.4rem; }
+    .stanza { font-size: 1.06rem; line-height: 1.85; margin-bottom: 1.7rem; }
+    .stanza-first { font-size: 1.1rem; }
+
+    .end-mark { padding: 2.2rem 0 1.4rem; }
+    .em-orn { letter-spacing: 0.4em; margin-bottom: 0.4rem; font-size: 0.9rem; }
+    .em-fin { font-size: 0.95rem; }
+    .em-meta { font-size: 0.55rem; flex-wrap: wrap; justify-content: center; gap: 0.45rem; }
+
+    .share { padding: 1.2rem 0.9rem; margin: 1.4rem 0; }
+    .share-row { gap: 0.4rem; }
+    .sbtn { font-size: 0.55rem; padding: 0.5rem 0.7rem; gap: 0.35rem; letter-spacing: 0.14em; }
+    .sbtn svg { width: 12px; height: 12px; }
+
+    .pnav { padding-top: 1.8rem; gap: 0.5rem; }
+    .pnav-item { padding: 0.55rem 0.6rem; }
+    .pnav-dir { font-size: 0.5rem; letter-spacing: 0.18em; }
+    .pnav-title { font-size: 0.92rem; }
+    .pnav-all { font-size: 0.55rem; padding: 0.5rem 0.75rem; gap: 0.45rem; }
+  }
+
+  @media (max-width: 380px) {
+    .article { padding: 5.4rem 0.95rem 2.6rem; }
+    .title { font-size: 1.7rem !important; }
+    .stanza { font-size: 1rem; line-height: 1.8; }
+    .sbtn { font-size: 0.5rem; padding: 0.45rem 0.6rem; }
+    .sbtn svg { width: 11px; height: 11px; }
+  }
+
+  /* drop cap mobile size */
+  @media (max-width: 720px) {
+    .stanza-first :global(.dropcap) {
+      font-size: clamp(2.6rem, 12vw, 3.4rem);
+      padding: 6px 9px 0 0;
+    }
   }
 </style>
-    
